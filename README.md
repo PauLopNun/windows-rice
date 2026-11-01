@@ -49,11 +49,10 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 
 | | |
 |---|---|
-| 🖥️ **Seelen UI** | Dock y barra superior estilo macOS con CPU y RAM. Arranca con Windows. En la barra tienes el **icono de volumen** (rueda del ratón = subir/bajar; clic = controles multimedia y mezclador) y en el dock los controles de lo que suena en Spotify/YouTube. Su capa de fondos propia viene **desactivada** para que se vea el fondo de Windows y ahorrar GPU/RAM |
+| 🖥️ **Seelen UI** | Dock y barra superior estilo macOS con CPU y RAM. Arranca con Windows. En la barra tienes el **icono de volumen** (rueda del ratón = subir/bajar el volumen general; clic = su mezclador) y en el dock los controles de lo que suena (anterior, pausa, siguiente). Su capa de fondos propia viene **desactivada** para que se vea el fondo de Windows y ahorrar GPU/RAM |
 | 🚀 **Flow Launcher** | `Alt+Espacio` abre apps, archivos, calcula y busca en la web. Tema Catppuccin Mocha. Busca archivos con **Everything** (instantáneo) |
 | 🔌 **Plugins de Flow** | Clipboard+ → `cbp` · Emoji → `e <nombre>` · Windows Settings → `s <ajuste>` · Window Walker y Colors funcionan al escribir directamente |
 | 🧰 **PowerToys** | Cuentagotas, copiar texto de imágenes, vista previa con Espacio, FancyZones, PowerRename… Arranca con Windows. Vienen **desactivados** los módulos que vigilan el ratón siempre (Find My Mouse, Mouse Highlighter) y Shortcut Guide |
-| 🔊 **EarTrumpet** | Mezclador de volumen **por aplicación** (Spotify aparte de Chrome). Su icono (altavoz con ondas) queda fijo en la barra superior de Seelen, a la izquierda del desplegable de la bandeja. Un vídeo concreto de YouTube no se puede separar de Chrome: Windows controla el volumen por programa |
 | 🔎 **Everything** | Búsqueda instantánea de archivos; Flow la usa por debajo (por eso arranca con Windows) |
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
@@ -118,6 +117,7 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 - Requiere Windows 10/11 con `winget` (App Installer); si falta, el script intenta registrarlo.
 - Seelen se instala como MSIX. Su tema y ajustes globales los eliges tú desde sus ajustes (`slu.exe settings`) y luego puedes volver a exportar.
 - **Temas de Seelen:** el pack usa el tema por defecto para mantener la paleta Catppuccin coherente con Flow, Terminal y el fondo. En [seelen.io/resources](https://seelen.io/resources) hay temas de la comunidad (por ejemplo *Aurora Glass*, *Neo Glass*, *Compact Design*); cada uno trae su propia paleta, así que pruébalos tú. Si te gusta uno, vuelve a ejecutar `export-config.ps1`.
+- **Volumen por aplicación o por pestaña:** no está incluido. Windows controla el volumen por programa y Chrome mete todas sus pestañas en uno solo, así que ninguna herramienta puede separar un vídeo de YouTube. Probé EarTrumpet y no mostraba la barra interna de Spotify ni el vídeo, así que lo quité. Para YouTube usa su propio reproductor (↑/↓ y `M`).
 - Los números de RAM son de un PC concreto; mide los tuyos con el Administrador de tareas.
 - Créditos y licencias de terceros en [THIRD-PARTY.md](THIRD-PARTY.md).
 

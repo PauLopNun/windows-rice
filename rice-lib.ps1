@@ -327,8 +327,6 @@ function Set-RiceAutostart($state, [scriptblock]$save, [switch]$NoSeelen) {
         $sa = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($sa) { $want += @{ Name = 'windows-rice-seelen'; Exe = 'explorer.exe'; Args = " shell:AppsFolder\$($sa.AppID)" } }
     }
-    $et = Get-StartApps -Name '*EarTrumpet*' -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($et) { $want += @{ Name = 'windows-rice-eartrumpet'; Exe = 'explorer.exe'; Args = " shell:AppsFolder\$($et.AppID)" } }
     foreach ($w in $want) {
         if (-not $w.Exe) { continue }
         Set-ItemProperty $script:RunKey -Name $w.Name -Value ('"{0}"{1}' -f $w.Exe, $w.Args)
@@ -350,30 +348,6 @@ function Start-RiceApps([switch]$NoSeelen) {
     if ($seelen -and -not $NoSeelen) { Start-RiceUnelevated "shell:AppsFolder\$($seelen.AppID)" }
     foreach ($a in 'flow', 'powertoys') { $e = Find-RiceExe $a; if ($e) { Start-RiceUnelevated $e } }
     $ev = Find-RiceExe 'everything'; if ($ev) { Start-Process explorer.exe -ArgumentList "`"$ev`"" }
-    $et = Get-StartApps -Name '*EarTrumpet*' -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($et) {
-        Start-RiceUnelevated "shell:AppsFolder\$($et.AppID)"
-        # Seelen esconde los iconos de bandeja en un desplegable: se marca el de EarTrumpet como "fijo" para que se vea en la barra
-        if (Pin-RiceTrayIcon 'EarTrumpet') {
-            Get-Process -Name 'EarTrumpet' -ErrorAction SilentlyContinue | Stop-Process -Force
-            Start-Sleep -Seconds 1
-            Start-RiceUnelevated "shell:AppsFolder\$($et.AppID)"
-        }
-    }
-}
-
-# Marca como "fijo" (IsPromoted) el icono de bandeja de un programa. La clave de Windows aparece tras su primer arranque: se espera.
-function Pin-RiceTrayIcon([string]$exeName) {
-    for ($i = 0; $i -lt 15; $i++) {
-        $k = Get-ChildItem 'HKCU:\Control Panel\NotifyIconSettings' -ErrorAction SilentlyContinue |
-             Where-Object { (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).ExecutablePath -match [regex]::Escape($exeName) } | Select-Object -First 1
-        if ($k) {
-            if ((Get-ItemProperty $k.PSPath).IsPromoted -ne 1) { Set-ItemProperty $k.PSPath -Name IsPromoted -Value 1 -Type DWord; return $true }
-            return $false
-        }
-        Start-Sleep -Seconds 1
-    }
-    return $false
 }
 
 # ------------------------------------------------------------------ plugins de Flow Launcher

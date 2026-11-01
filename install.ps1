@@ -124,8 +124,6 @@ $packages = @(
     @{ Id = 'Microsoft.PowerShell';        Name = 'PowerShell 7' }
     @{ Id = 'DEVCOM.JetBrainsMonoNerdFont';Name = 'JetBrainsMono Nerd Font' }
     @{ Id = 'Starship.Starship';           Name = 'Starship' }
-    # EarTrumpet: la fuente 'winget' falla (tiempo de espera al bajar su MSIX); la Microsoft Store si funciona
-    @{ Id = '9NBLGGH516XP'; Name = 'EarTrumpet (volumen por app)'; Source = 'msstore'; Appx = '*EarTrumpet*' }
 )
 if (-not $NoCli) {
     $packages += @(
