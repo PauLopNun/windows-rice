@@ -158,7 +158,12 @@ function Export-RiceConfig([string]$outDir) {
 
 # ------------------------------------------------------------------ aplicar
 function Stop-RiceApp([string]$app) {
-    foreach ($pn in $script:AppProcs[$app]) { Get-Process -Name $pn -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue }
+    # un proceso con permisos elevados (p. ej. slu-service) no se puede cerrar sin administrador: se ignora, no debe abortar nada
+    foreach ($pn in $script:AppProcs[$app]) {
+        foreach ($proc in @(Get-Process -Name $pn -ErrorAction SilentlyContinue)) {
+            try { Stop-Process -Id $proc.Id -Force -ErrorAction Stop } catch { }
+        }
+    }
 }
 
 function Apply-RiceConfig([string]$cfgRoot, $state, [scriptblock]$save, [string[]]$skipApps = @()) {

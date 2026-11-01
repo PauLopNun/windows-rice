@@ -33,18 +33,21 @@ if ($ref -notmatch '(?m)^right:' -or $ref -notmatch '@default/power') { throw 'E
 
 # 2) parar Seelen, copia de seguridad y restaurar
 $app = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
-Get-Process -Name 'seelen-ui', 'slu-service' -ErrorAction SilentlyContinue | Stop-Process -Force
+# solo la parte visual: slu-service va con permisos elevados y no se puede cerrar sin administrador (Seelen lo gestiona solo)
+foreach ($proc in @(Get-Process -Name 'seelen-ui' -ErrorAction SilentlyContinue)) { try { Stop-Process -Id $proc.Id -Force -ErrorAction Stop } catch { Write-Host "[!] No pude cerrar Seelen: $($_.Exception.Message)" -ForegroundColor Yellow } }
 Start-Sleep -Seconds 2
-New-Item -ItemType Directory -Force -Path $tbDir | Out-Null
-if (Test-Path $tbFile) { Copy-Item $tbFile "$tbFile.bak-repair" -Force; Write-Host "[+] Copia de tu barra: $tbFile.bak-repair" -ForegroundColor Green }
-[IO.File]::WriteAllText($tbFile, $ref, (New-Object Text.UTF8Encoding $false))
-Write-Host '[+] Barra superior restaurada (CPU, RAM, bandeja, idioma, bluetooth, red, volumen, energia, notificaciones, ajustes).' -ForegroundColor Green
+try {
+    New-Item -ItemType Directory -Force -Path $tbDir | Out-Null
+    if (Test-Path $tbFile) { Copy-Item $tbFile "$tbFile.bak-repair" -Force; Write-Host "[+] Copia de tu barra: $tbFile.bak-repair" -ForegroundColor Green }
+    [IO.File]::WriteAllText($tbFile, $ref, (New-Object Text.UTF8Encoding $false))
+    Write-Host '[+] Barra superior restaurada (CPU, RAM, bandeja, idioma, bluetooth, red, volumen, energia, notificaciones, ajustes).' -ForegroundColor Green
 
-if ($ResetDock) {
-    $weg = Join-Path $cfg 'data\seelen-weg\state.yml'
-    if (Test-Path $weg) { Copy-Item $weg "$weg.bak-repair" -Force; Remove-Item $weg -Force; Write-Host '[+] Dock reiniciado (Seelen lo recreara con las apps de tu barra de tareas).' -ForegroundColor Green }
+    if ($ResetDock) {
+        $weg = Join-Path $cfg 'data\seelen-weg\state.yml'
+        if (Test-Path $weg) { Copy-Item $weg "$weg.bak-repair" -Force; Remove-Item $weg -Force; Write-Host '[+] Dock reiniciado (Seelen lo recreara con las apps de tu barra de tareas).' -ForegroundColor Green }
+    }
+} finally {
+    # 3) volver a abrir Seelen SIEMPRE (sin privilegios de administrador), pase lo que pase arriba
+    if ($app) { Start-Process explorer.exe -ArgumentList "shell:AppsFolder\$($app.AppID)"; Write-Host '[+] Seelen reiniciado.' -ForegroundColor Green }
+    else { Write-Host '[!] No encuentro Seelen en el menu Inicio: abrelo a mano.' -ForegroundColor Yellow }
 }
-
-# 3) volver a abrir Seelen (sin privilegios de administrador)
-if ($app) { Start-Process explorer.exe -ArgumentList "shell:AppsFolder\$($app.AppID)"; Write-Host '[+] Seelen reiniciado.' -ForegroundColor Green }
-else { Write-Host '[!] No encuentro Seelen en el menu Inicio: abrelo a mano.' -ForegroundColor Yellow }
