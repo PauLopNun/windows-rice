@@ -14,7 +14,7 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 if (-not $isAdmin) {
     Write-Host '[*] Pidiendo permisos de administrador...' -ForegroundColor Cyan
     $cmd = "irm https://raw.githubusercontent.com/$repo/$branch/get.ps1 | iex"
-    Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', $cmd
+    Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile', '-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $cmd
     return
 }
 
