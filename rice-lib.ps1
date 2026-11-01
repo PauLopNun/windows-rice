@@ -317,18 +317,23 @@ function Find-RiceExe([string]$app) {
     $c | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 }
 
-function Set-RiceAutostart($state, [scriptblock]$save) {
+function Set-RiceAutostart($state, [scriptblock]$save, [switch]$NoSeelen) {
     $want = @(
         @{ Name = 'windows-rice-flow';       Exe = (Find-RiceExe 'flow');       Args = '' }
         @{ Name = 'windows-rice-everything'; Exe = (Find-RiceExe 'everything'); Args = ' -startup' }
     )
+    # Seelen (MSIX) no trae tarea de inicio propia: se arranca igual que desde el menu Inicio (shell:AppsFolder)
+    if (-not $NoSeelen) {
+        $sa = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($sa) { $want += @{ Name = 'windows-rice-seelen'; Exe = 'explorer.exe'; Args = " shell:AppsFolder\$($sa.AppID)" } }
+    }
     foreach ($w in $want) {
         if (-not $w.Exe) { continue }
         Set-ItemProperty $script:RunKey -Name $w.Name -Value ('"{0}"{1}' -f $w.Exe, $w.Args)
         if (@($state.runEntries) -notcontains $w.Name) { $state.runEntries = @($state.runEntries) + $w.Name }
     }
     & $save
-    Write-Host '[+] Flow Launcher y Everything arrancaran con Windows (Seelen y PowerToys usan su propio ajuste, que ya viaja en la config).' -ForegroundColor Green
+    Write-Host '[+] Seelen, Flow Launcher y Everything arrancaran con Windows (PowerToys ya lo hace por su tarea de inicio).' -ForegroundColor Green
 }
 
 function Remove-RiceAutostart($state) {
@@ -373,4 +378,37 @@ function Install-RicePlugins([string]$listFile, $state, [scriptblock]$save) {
         } catch { Write-Host "[!] Plugin $($p.name): $($_.Exception.Message)" -ForegroundColor Yellow }
     }
     Remove-Item $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# ------------------------------------------------------------------ accesos directos del escritorio
+# Los instaladores (Flow, Everything, PowerToys...) a veces crean .lnk en el escritorio. Se apuntan antes de instalar
+# y se borran SOLO los que han aparecido durante la instalacion (nunca los que ya tenias).
+function Get-RiceDesktopLinks {
+    $dirs = @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('CommonDesktopDirectory')) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
+    $r = @()
+    foreach ($d in $dirs) { $r += @(Get-ChildItem -LiteralPath $d -Filter *.lnk -File -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) }
+    return $r
+}
+function Remove-RiceNewDesktopLinks($before) {
+    $n = 0
+    foreach ($f in @(Get-RiceDesktopLinks)) {
+        if (@($before) -notcontains $f) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue; $n++ }
+    }
+    if ($n) { Write-Host "[+] Quitados $n acceso(s) directo(s) que los instaladores dejaron en el escritorio." -ForegroundColor Green }
+}
+
+# winget no deja desinstalar apps instaladas "para el usuario" (Flow, PowerToys...) desde una consola de administrador.
+# Se reintenta SIN privilegios (via explorer) y se espera el resultado.
+function Uninstall-RiceUnelevated([string]$id) {
+    $base = Join-Path $env:TEMP ('rice-un-' + [guid]::NewGuid().ToString('N'))
+    $cmd = "$base.cmd"; $res = "$base.result"
+    $wc = Get-Command winget -ErrorAction SilentlyContinue | Select-Object -First 1
+    $wg = if ($wc -and $wc.CommandType -eq 'Alias') { $wc.Definition } elseif ($wc) { $wc.Source } else { Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\winget.exe' }
+    $lines = "@echo off", "`"$wg`" uninstall --id $id --exact --silent --accept-source-agreements", "echo %errorlevel%> `"$res`""
+    Set-Content -Path $cmd -Value $lines -Encoding ASCII
+    Start-Process explorer.exe -ArgumentList "`"$cmd`""
+    for ($i = 0; $i -lt 100 -and -not (Test-Path $res); $i++) { Start-Sleep -Seconds 3 }
+    $code = if (Test-Path $res) { (Get-Content $res -Raw).Trim() } else { 'timeout' }
+    Remove-Item $cmd, $res -Force -ErrorAction SilentlyContinue
+    return $code
 }

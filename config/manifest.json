@@ -1,5 +1,5 @@
 ﻿{
-    "exportedAt":  "2026-11-01T23:30:28",
+    "exportedAt":  "2026-11-01T23:39:39",
     "items":  [
                   {
                       "key":  "seelen-roaming",
@@ -7,7 +7,7 @@
                       "path":  "{APPDATA}\\com.seelen.seelen-ui",
                       "literal":  "{APPDATA}\\com.seelen.seelen-ui",
                       "isFile":  false,
-                      "bytes":  1007
+                      "bytes":  1067
                   },
                   {
                       "key":  "seelen-local",
@@ -23,7 +23,7 @@
                       "path":  "{APPDATA}\\FlowLauncher",
                       "literal":  "{APPDATA}\\FlowLauncher",
                       "isFile":  false,
-                      "bytes":  69453
+                      "bytes":  69452
                   },
                   {
                       "key":  "powertoys",
@@ -31,7 +31,7 @@
                       "path":  "{LOCALAPPDATA}\\Microsoft\\PowerToys",
                       "literal":  "{LOCALAPPDATA}\\Microsoft\\PowerToys",
                       "isFile":  false,
-                      "bytes":  17115
+                      "bytes":  16642
                   },
                   {
                       "key":  "everything-user",

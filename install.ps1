@@ -142,6 +142,8 @@ function Test-Installed([string]$id) {
     return ($LASTEXITCODE -eq 0)
 }
 
+$desktopBefore = Get-RiceDesktopLinks   # para no dejar accesos directos nuevos en el escritorio
+
 foreach ($pkg in $packages) {
     if (Test-Installed $pkg.Id) {
         Ok "$($pkg.Name) ya estaba instalado, no lo toco."
@@ -157,6 +159,8 @@ foreach ($pkg in $packages) {
         Warn "Fallo instalando $($pkg.Name) (codigo $LASTEXITCODE). Prueba: winget search `"$($pkg.Name)`""
     }
 }
+
+Remove-RiceNewDesktopLinks $desktopBefore
 
 # refrescar PATH para usar lo recien instalado en esta sesion
 $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
@@ -342,13 +346,15 @@ Install-RicePlugins (Join-Path $PSScriptRoot 'plugins.json') $state { Save-State
 
 # ---------------------------------------------------------------- ajustes de Windows + autoarranque
 if (-not $NoTweaks) { Apply-RiceTweaks $state { Save-State } }
-Set-RiceAutostart $state { Save-State }
+Set-RiceAutostart $state { Save-State } -NoSeelen:$NoSeelen
 
 # ---------------------------------------------------------------- abrir todo
 if (-not $NoLaunch) {
     Info 'Abriendo Seelen UI, Flow Launcher, PowerToys y Everything...'
     Start-RiceApps -NoSeelen:$NoSeelen
 }
+
+Remove-RiceNewDesktopLinks $desktopBefore   # por si alguna app lo crea al abrirse por primera vez
 
 # ---------------------------------------------------------------- fin
 Write-Host ''

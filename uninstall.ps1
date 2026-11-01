@@ -171,7 +171,13 @@ foreach ($id in $pkgs) {
     if ($id -eq 'Flow-Launcher.Flow-Launcher') { Get-Process -Name 'Flow.Launcher' -ErrorAction SilentlyContinue | Stop-Process -Force }
     Info "Desinstalando $id..."
     winget uninstall --id $id --exact --silent --accept-source-agreements
-    if ($LASTEXITCODE -eq 0) { Ok "$id desinstalado." } else { Warn "${id}: winget devolvio $LASTEXITCODE (quitalo desde Configuracion > Aplicaciones si sigue ahi)." }
+    if ($LASTEXITCODE -eq 0) { Ok "$id desinstalado." }
+    elseif ($LASTEXITCODE -eq -1978335107) {
+        Info "$id es de usuario: reintento sin privilegios de administrador..."
+        $c = Uninstall-RiceUnelevated $id
+        if ($c -eq "0") { Ok "$id desinstalado." } else { Warn "${id}: no se pudo (codigo $c). Quitalo desde Configuracion > Aplicaciones." }
+    }
+    else { Warn "${id}: winget devolvio $LASTEXITCODE (quitalo desde Configuracion > Aplicaciones si sigue ahi)." }
 }
 
 # ---------------------------------------------------------------- purge opcional

@@ -49,7 +49,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 
 | | |
 |---|---|
-| 🖥️ **Seelen UI** | Dock y barra superior estilo macOS con CPU y RAM, colores que salen del fondo |
+| 🖥️ **Seelen UI** | Dock y barra superior estilo macOS con CPU y RAM. Arranca con Windows. En la barra tienes el **icono de volumen** (rueda del ratón = subir/bajar; clic = controles multimedia y mezclador) y en el dock los controles de lo que suena en Spotify/YouTube. Su capa de fondos propia viene **desactivada** para que se vea el fondo de Windows y ahorrar GPU/RAM |
 | 🚀 **Flow Launcher** | `Alt+Espacio` abre apps, archivos, calcula y busca en la web. Tema Catppuccin Mocha. Busca archivos con **Everything** (instantáneo) |
 | 🔌 **Plugins de Flow** | Clipboard+ → `cbp` · Emoji → `e <nombre>` · Windows Settings → `s <ajuste>` · Window Walker y Colors funcionan al escribir directamente |
 | 🧰 **PowerToys** | Cuentagotas, copiar texto de imágenes, vista previa con Espacio, FancyZones, PowerRename… Arranca con Windows. Vienen **desactivados** los módulos que vigilan el ratón siempre (Find My Mouse, Mouse Highlighter) y Shortcut Guide |
@@ -58,7 +58,8 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
 | 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
-| ⚡ **Autoarranque** | Flow y Everything arrancan con Windows; se abre todo al terminar |
+| ⚡ **Autoarranque** | Seelen, Flow, Everything y PowerToys arrancan con Windows; se abre todo al terminar |
+| 🧼 **Escritorio limpio** | Los accesos directos que dejan los instaladores en el escritorio se borran (solo los nuevos; los tuyos no se tocan) |
 
 ## 📊 Rendimiento
 
