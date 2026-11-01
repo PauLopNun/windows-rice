@@ -7,6 +7,7 @@
   Lee el codigo antes si quieres: es corto y esta todo en el repo.
 #>
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $repo   = 'PauLopNun/windows-rice'
 $branch = 'main'
 

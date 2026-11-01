@@ -20,10 +20,12 @@ param(
     [switch]$NoCli,
     [switch]$NoTweaks,   # no tocar modo oscuro / extensiones / botones de la barra
     [switch]$NoLaunch,   # no abrir las apps al terminar
-    [switch]$NoSeelen    # modo ligero: sin Seelen (dock/barra). Seelen gasta ~1 GB de RAM
+    [switch]$NoSeelen,   # modo ligero: sin Seelen (dock/barra). Seelen gasta ~1 GB de RAM
+    [switch]$NoCursor    # no cambiar el cursor del raton (Bibata)
 )
 
 $ErrorActionPreference = 'Continue'
+$ProgressPreference = 'SilentlyContinue'   # la barra de progreso de Invoke-WebRequest ralentiza mucho las descargas en PowerShell 5.1
 $Marker      = 'windows-rice'
 $StateDir    = Join-Path $env:LOCALAPPDATA 'windows-rice'
 $StateFile   = Join-Path $StateDir 'state.json'
@@ -51,6 +53,7 @@ $state = [ordered]@{
     tweaks              = @()
     runEntries          = @()
     flowPlugins         = @()
+    cursor              = $null
 }
 if (Test-Path $StateFile) {
     $old = Get-Content $StateFile -Raw | ConvertFrom-Json
@@ -347,6 +350,9 @@ if (Test-Path (Join-Path $cfgRoot 'manifest.json')) {
 
 # ---------------------------------------------------------------- plugins de Flow Launcher (versiones fijas + SHA256)
 Install-RicePlugins (Join-Path $PSScriptRoot 'plugins.json') $state { Save-State }
+
+# ---------------------------------------------------------------- cursor (Bibata Modern Classic, version fija + SHA256)
+if (-not $NoCursor) { Install-RiceCursor (Join-Path $PSScriptRoot 'cursor.json') $state { Save-State } }
 
 # ---------------------------------------------------------------- ajustes de Windows + autoarranque
 if (-not $NoTweaks) { Apply-RiceTweaks $state { Save-State } }

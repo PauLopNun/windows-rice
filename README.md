@@ -41,6 +41,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 |---|---|
 | `-NoSeelen` | **Modo ligero**: sin dock ni barra (Seelen es lo que más RAM gasta, ver abajo) |
 | `-NoCli` | Sin Git, zoxide, fzf, lazygit ni fastfetch |
+| `-NoCursor` | No cambia el cursor del ratón |
 | `-NoTweaks` | No toca modo oscuro, extensiones ni botones de la barra |
 | `-NoLaunch` | No abre las apps al terminar |
 | `-SkipRestorePoint` | No crea punto de restauración (Windows solo permite uno cada 24 h) |
@@ -58,6 +59,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🔎 **Everything** | Búsqueda instantánea de archivos; Flow la usa por debajo (por eso arranca con Windows) |
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
+| 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern Classic (negro, redondeado). Se descarga al instalar y al desinstalar vuelve el tuyo |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
 | 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
 | ⚡ **Autoarranque** | Seelen, Flow, Everything y PowerToys arrancan con Windows; se abre todo al terminar |
@@ -98,7 +100,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\uninstal
 powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\uninstall.ps1" -Purge   # y borra las configs de las apps
 ```
 
-Deshace **solo** lo que hizo el script: apps instaladas, plugins, tema y fuente de Terminal, bloque del perfil de PowerShell, `starship.toml`, ExecutionPolicy, ajustes de Windows, fondo, autoarranque, y devuelve la configuración que tenías antes. Reinicia después.
+Deshace **solo** lo que hizo el script: apps instaladas, plugins, cursor, tema y fuente de Terminal, bloque del perfil de PowerShell, `starship.toml`, ExecutionPolicy, ajustes de Windows, fondo, autoarranque, y devuelve la configuración que tenías antes. Reinicia después.
 
 Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes de windows-rice"**. El registro de cambios está en `%LOCALAPPDATA%\windows-rice\state.json`.
 
@@ -111,6 +113,7 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 | `export-config.ps1` | Guarda tu config en `config\` |
 | `rice-lib.ps1` | Funciones compartidas |
 | `plugins.json` | Plugins de Flow con versión fija y SHA256 |
+| `cursor.json` | Cursor Bibata con versión fija y SHA256 |
 | `config\` | Ajustes que se aplican al instalar |
 | `assets\` | Fondo de pantalla |
 

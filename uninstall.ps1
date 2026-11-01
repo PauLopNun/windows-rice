@@ -158,6 +158,7 @@ foreach ($c in @($state.configApplied)) {
 }
 
 # ---------------------------------------------------------------- fondo, ajustes de Windows, autoarranque
+Restore-RiceCursor $state
 Restore-RiceWallpaper $state
 Restore-RiceTweaks $state
 Remove-RiceAutostart $state

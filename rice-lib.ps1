@@ -412,3 +412,72 @@ function Uninstall-RiceUnelevated([string]$id) {
     Remove-Item $cmd, $res -Force -ErrorAction SilentlyContinue
     return $code
 }
+
+# ------------------------------------------------------------------ cursor (Bibata)
+# Se descarga del release oficial (version fija + SHA256), se instala solo para el usuario (sin admin) y se guardan
+# los valores anteriores del registro para devolverlos al desinstalar. Bibata es GPL-3.0: no se redistribuye en este repo.
+$script:CursorMap = [ordered]@{
+    Arrow = 'Pointer.cur'; Help = 'Help.cur'; AppStarting = 'Work.ani'; Wait = 'Busy.ani'; crosshair = 'Cross.cur'
+    precisionhair = 'Cross.cur'; IBeam = 'Text.cur'; NWPen = 'Handwriting.cur'; No = 'Unavailable.cur'; SizeNS = 'Vert.cur'
+    SizeWE = 'Horz.cur'; SizeNWSE = 'Dgn1.cur'; SizeNESW = 'Dgn2.cur'; Grab = 'Move.cur'; SizeAll = 'Move.cur'
+    UpArrow = 'Alternate.cur'; Hand = 'Link.cur'; Pin = 'Pin.cur'; Person = 'Person.cur'; Pan = 'Pan.cur'
+    Grabbing = 'Grabbing.cur'; 'Zoom-in' = 'Zoom-in.cur'; 'Zoom-out' = 'Zoom-out.cur'
+}
+function Send-RiceCursorChange {
+    if (-not ('RiceNative' -as [type])) {
+        Add-Type -Namespace '' -Name RiceNative -MemberDefinition @'
+[System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+public static extern int SystemParametersInfo(int a, int b, string c, int d);
+'@
+    }
+    [void][RiceNative]::SystemParametersInfo(0x57, 0, $null, 3)   # SPI_SETCURSORS: recargar los cursores ya
+}
+function Install-RiceCursor([string]$jsonFile, $state, [scriptblock]$save) {
+    if (-not (Test-Path $jsonFile)) { return }
+    if ($state.cursor) { Write-Host '[+] Cursor: ya instalado por este script.' -ForegroundColor Green; return }
+    $c = Get-Content $jsonFile -Raw | ConvertFrom-Json
+    $tmp = Join-Path $env:TEMP ('rice-cur-' + [guid]::NewGuid().ToString('N'))
+    try {
+        New-Item -ItemType Directory -Path $tmp | Out-Null
+        $zip = Join-Path $tmp 'c.zip'
+        Invoke-WebRequest $c.url -OutFile $zip -UseBasicParsing
+        if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $c.sha256) { throw 'el hash no coincide, no lo instalo' }
+        Expand-Archive $zip -DestinationPath (Join-Path $tmp 'x') -Force
+        $src = Join-Path (Join-Path $tmp 'x') $c.subdir
+        if (-not (Test-Path (Join-Path $src 'Pointer.cur'))) { throw 'el paquete no tiene el formato esperado' }
+        $dir = Join-Path $env:LOCALAPPDATA ('windows-rice\cursors\' + $c.name)
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        Copy-Item (Join-Path $src '*.cur'), (Join-Path $src '*.ani') -Destination $dir -Force
+        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Control Panel\Cursors', $true)
+        $names = @('') + @($script:CursorMap.Keys) + @('Scheme Source')
+        $prev = @()
+        foreach ($n in $names) {
+            $v = $key.GetValue($n, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+            $prev += [pscustomobject]@{ name = $n; value = $v; kind = $(if ($null -ne $v) { "$($key.GetValueKind($n))" } else { $null }) }
+        }
+        $state.cursor = [pscustomobject]@{ dir = $dir; prev = $prev }; & $save
+        $key.SetValue('', $c.name, 'String')
+        foreach ($kv in $script:CursorMap.GetEnumerator()) { $key.SetValue($kv.Key, (Join-Path $dir $kv.Value), 'ExpandString') }
+        $key.SetValue('Scheme Source', 1, 'DWord')
+        $key.Close()
+        Send-RiceCursorChange
+        Write-Host "[+] Cursor $($c.name) $($c.version) aplicado." -ForegroundColor Green
+    } catch { Write-Host "[!] Cursor: $($_.Exception.Message)" -ForegroundColor Yellow }
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+}
+function Restore-RiceCursor($state) {
+    $cur = $state.cursor
+    if (-not $cur) { return }
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Control Panel\Cursors', $true)
+    foreach ($p in @($cur.prev)) {
+        if ($null -eq $p.value) { $key.DeleteValue($p.name, $false) }
+        else {
+            $kind = if ($p.kind) { $p.kind } else { 'String' }
+            $key.SetValue($p.name, $p.value, $kind)
+        }
+    }
+    $key.Close()
+    Send-RiceCursorChange
+    if ($cur.dir -and (Test-Path -LiteralPath $cur.dir)) { Remove-Item -LiteralPath $cur.dir -Recurse -Force -ErrorAction SilentlyContinue }
+    Write-Host '[+] Cursor devuelto al que tenias.' -ForegroundColor Green
+}

@@ -11,6 +11,7 @@ Este repo solo contiene scripts y ajustes. Las aplicaciones **no se redistribuye
 | Plugin Windows Settings | [Flow-Launcher/Flow.Launcher.Plugin.WindowsSettings](https://github.com/Flow-Launcher/Flow.Launcher.Plugin.WindowsSettings) | ver su repo |
 | Plugin Colors | [Flow-Launcher/Flow.Launcher.Plugin.Color](https://github.com/Flow-Launcher/Flow.Launcher.Plugin.Color) | ver su repo |
 | Plugin Search Unicode & Emoji | [blueset/flow-search-unicode](https://github.com/blueset/flow-search-unicode) | ver su repo |
+| Cursor Bibata Modern Classic (se descarga al instalar, no se incluye aquí) | [ful1e5/Bibata_Cursor](https://github.com/ful1e5/Bibata_Cursor) | GPL-3.0 |
 | Fondo `assets/wallpaper.jpg` | generado para este repo con la paleta Catppuccin | MIT (como el resto) |
 
 Los plugins se descargan al instalar, con versión fija (`plugins.json`) y comprobación de SHA256.
