@@ -1,0 +1,43 @@
+isReorderDisabled: false
+left:
+- '@seelen/tb-user-menu'
+- id: 6f6fd6e4-2910-4915-afda-a00fbb530a34
+  scopes: []
+  template: return "|"
+  render: null
+  canvasSize: null
+  tooltip: null
+  badge: null
+  onClick: null
+  onWheelUp: null
+  onWheelDown: null
+  style: {}
+  remoteData: {}
+- '@default/focused-app'
+- id: f5b0c91a-ee2d-4c25-9f72-06fa85076e7c
+  scopes:
+  - FocusedApp
+  template: 'return focusedApp.title ? "-" : ""'
+  render: null
+  canvasSize: null
+  tooltip: null
+  badge: null
+  onClick: null
+  onWheelUp: null
+  onWheelDown: null
+  style: {}
+  remoteData: {}
+- '@default/focused-app-title'
+center:
+- '@seelen/tb-calendar-popup'
+right:
+- '@default/cpu-usage'
+- '@default/memory-usage'
+- '@seelen/tb-system-tray'
+- '@seelen/tb-keyboard-selector'
+- '@seelen/tb-bluetooth-popup'
+- '@seelen/tb-network-popup'
+- '@seelen/tb-media-popup'
+- '@default/power'
+- '@seelen/tb-notifications'
+- '@seelen/tb-quick-settings'

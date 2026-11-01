@@ -1,0 +1,52 @@
+[
+    {
+        "name":  "Clipboard+",
+        "id":  "ff9385ec-0e95-452f-bef2-62456f66fe0f",
+        "version":  "2.4.6",
+        "url":  "https://github.com/Jack251970/Flow.Launcher.Plugin.ClipboardPlus/releases/download/v2.4.6/Clipboard%2B-2.4.6.zip",
+        "sha256":  "A36D27A3A1A1AF599C9955C8F0E81E3E2A036F6B5144F3CEB8B83E744E72D2FB",
+        "subdir":  "",
+        "language":  "csharp",
+        "website":  "https://github.com/Jack251970/Flow.Launcher.Plugin.ClipboardPlus"
+    },
+    {
+        "name":  "Window Walker",
+        "id":  "F737A9223560B3C6833B5FFB8CDF78E5",
+        "version":  "3.1.0",
+        "url":  "https://github.com/taooceros/Flow.Plugin.WindowWalker/releases/download/v3.1.0/WindowWalker-3.1.0.zip",
+        "sha256":  "C8E9773576BF80C4188BF42D4F25C62400924E825B92B5FF81498EF9DF163039",
+        "subdir":  "",
+        "language":  "csharp",
+        "website":  "https://github.com/taooceros/Flow.Plugin.WindowWalker"
+    },
+    {
+        "name":  "Windows Settings",
+        "id":  "5043CETYU6A748679OPA02D27D99677A",
+        "version":  "1.20.2",
+        "url":  "https://github.com/Flow-Launcher/Flow.Launcher.Plugin.WindowsSettings/releases/download/v1.20.2/Flow.Launcher.Plugin.WindowsSettings.zip",
+        "sha256":  "49225316521D39E562459437D259A5DE9D6A9FFDA17DC6B381A0FCB3DCDD89A1",
+        "subdir":  "",
+        "language":  "csharp",
+        "website":  "https://github.com/Flow-Launcher/Flow.Launcher"
+    },
+    {
+        "name":  "Colors",
+        "id":  "9B36CE6181FC47FBB597AA2C29CD9B0A",
+        "version":  "3.0.0",
+        "url":  "https://github.com/Flow-Launcher/Flow.Launcher.Plugin.Color/releases/download/v3.0.0/Color-3.0.0.zip",
+        "sha256":  "335A59AEB48FE8BCB5916F8573CF6A38257DCE5BBDC27B81A371FF7927EFF947",
+        "subdir":  "",
+        "language":  "csharp",
+        "website":  "https://github.com/Flow-Launcher/Flow.Launcher.Plugin.Color"
+    },
+    {
+        "name":  "Search Unicode and Emoji",
+        "id":  "BB55C11CB9FB4AAF81B670D9FF0BFBEE",
+        "version":  "1.0.4",
+        "url":  "https://github.com/blueset/flow-search-unicode/releases/download/v1.0.4/SearchUnicode.Emoji.zip",
+        "sha256":  "0C4835975AE71D524247D483E8F322B3BB5B11C8ADE8C8222EF31EFD69B54BC4",
+        "subdir":  "Flow.Launcher.Plugin.SearchUnicode.Emoji",
+        "language":  "csharp",
+        "website":  "https://github.com/blueset/flow-search-unicode"
+    }
+]

@@ -1,0 +1,58 @@
+﻿{
+    "exportedAt":  "2026-11-01T23:11:34",
+    "items":  [
+                  {
+                      "key":  "seelen-roaming",
+                      "app":  "seelen",
+                      "path":  "{APPDATA}\\com.seelen.seelen-ui",
+                      "literal":  "{APPDATA}\\com.seelen.seelen-ui",
+                      "isFile":  false,
+                      "bytes":  1007
+                  },
+                  {
+                      "key":  "seelen-local",
+                      "app":  "seelen",
+                      "path":  "{LOCALAPPDATA}\\com.seelen.seelen-ui",
+                      "literal":  "{LOCALAPPDATA}\\com.seelen.seelen-ui",
+                      "isFile":  false,
+                      "bytes":  17
+                  },
+                  {
+                      "key":  "flow",
+                      "app":  "flow",
+                      "path":  "{APPDATA}\\FlowLauncher",
+                      "literal":  "{APPDATA}\\FlowLauncher",
+                      "isFile":  false,
+                      "bytes":  26193
+                  },
+                  {
+                      "key":  "powertoys",
+                      "app":  "powertoys",
+                      "path":  "{LOCALAPPDATA}\\Microsoft\\PowerToys",
+                      "literal":  "{LOCALAPPDATA}\\Microsoft\\PowerToys",
+                      "isFile":  false,
+                      "bytes":  16782
+                  },
+                  {
+                      "key":  "everything-pf",
+                      "app":  "everything",
+                      "path":  "{PROGRAMFILES}\\Everything\\Everything.ini",
+                      "literal":  "{PROGRAMFILES}\\Everything\\Everything.ini",
+                      "isFile":  true,
+                      "bytes":  197
+                  },
+                  {
+                      "key":  "starship",
+                      "app":  "starship",
+                      "path":  "{USERPROFILE}\\.config\\starship.toml",
+                      "literal":  "{USERPROFILE}\\.config\\starship.toml",
+                      "isFile":  true,
+                      "bytes":  7727
+                  }
+              ],
+    "wallpaper":  "wallpaper.jpg",
+    "versions":  {
+                     "seelen":  "2.8.10.0",
+                     "flow":  "2.1.4"
+                 }
+}
