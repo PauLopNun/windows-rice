@@ -9,6 +9,7 @@
 Paleta **Catppuccin Mocha** en todo · se instala con un script · se quita con otro
 
 </div>
+![windows-rice: Seelen UI con dock y barra, fondo Catppuccin](assets/screenshot.jpg)
 
 ---
 
