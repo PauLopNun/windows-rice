@@ -38,6 +38,7 @@ Expand-Archive (Join-Path $tmp 'r.zip') -DestinationPath $tmp -Force
 $src = Get-ChildItem $tmp -Directory | Select-Object -First 1
 
 # Se COPIA (no se mueve): el antivirus escanea lo recien extraido y Move-Item suele dar "acceso denegado".
+Set-Location $env:TEMP   # si la consola esta dentro de la carpeta de destino, Windows no deja borrarla ("en uso")
 if (Test-Path $dest) { Remove-Item $dest -Recurse -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 $copied = $false

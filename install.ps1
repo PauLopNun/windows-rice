@@ -108,7 +108,7 @@ if (-not $SkipRestorePoint) {
         try { Receive-Job $job -ErrorAction Stop | Out-Null; Ok 'Punto de restauracion creado.' }
         catch {
             Warn "No se pudo crear el punto de restauracion: $($_.Exception.Message)"
-            Warn 'Windows solo permite uno cada 24h. Sigo igualmente.'
+            Warn 'Sigo igualmente (no es grave: es solo una copia de seguridad extra).'
         }
     } else {
         Stop-Job $job -ErrorAction SilentlyContinue
@@ -142,10 +142,12 @@ if ($NoSeelen) { $packages = @($packages | Where-Object { $_.Id -ne 'Seelen.Seel
 
 function Test-Installed($pkg) {
     if ($pkg.Appx) { return [bool](Get-AppxPackage -Name $pkg.Appx -ErrorAction SilentlyContinue) }
-    winget list --id $pkg.Id --exact --accept-source-agreements *> $null
-    return ($LASTEXITCODE -eq 0)
+    # se mira el texto (no el codigo de salida): si un origen como msstore falla, winget devuelve error aunque el programa este
+    $out = (winget list --id $pkg.Id --exact --accept-source-agreements 2>&1 | Out-String)
+    return ($out -match [regex]::Escape($pkg.Id))
 }
 
+$failedPkgs = @()
 $desktopBefore = Get-RiceDesktopLinks   # para no dejar accesos directos nuevos en el escritorio
 
 foreach ($pkg in $packages) {
@@ -155,7 +157,9 @@ foreach ($pkg in $packages) {
     }
     Info "Instalando $($pkg.Name)..."
     $wargs = @('install', '--id', $pkg.Id, '--exact', '--silent', '--accept-package-agreements', '--accept-source-agreements')
-    if ($pkg.Source) { $wargs += @('--source', $pkg.Source) }
+    # --source siempre: si un origen (p. ej. msstore) falla por certificado, winget se niega a elegir y no instala nada
+    $srcName = if ($pkg.Source) { $pkg.Source } else { 'winget' }
+    $wargs += @('--source', $srcName)
     winget @wargs
     $code = $LASTEXITCODE   # se guarda ya: Test-Installed lo sobrescribe
     if ($code -eq 0 -or (Test-Installed $pkg)) {
@@ -163,7 +167,8 @@ foreach ($pkg in $packages) {
         if ($state.installedPackages -notcontains $pkg.Id) { $state.installedPackages += $pkg.Id }
         Save-State
     } else {
-        Warn "Fallo instalando $($pkg.Name) (codigo $code). Puedes reintentar: winget install --id $($pkg.Id) --exact"
+        Warn "Fallo instalando $($pkg.Name) (codigo $code). Puedes reintentar: winget install --id $($pkg.Id) --exact --source winget"
+        $failedPkgs += $pkg.Name
     }
 }
 
@@ -368,7 +373,11 @@ Remove-RiceNewDesktopLinks $desktopBefore   # por si alguna app lo crea al abrir
 
 # ---------------------------------------------------------------- fin
 Write-Host ''
-if ($hasConfig) {
+if ($failedPkgs.Count) {
+    Warn "No se pudieron instalar: $($failedPkgs -join ', ')"
+    Warn 'Suele ser la red o la fecha/hora de Windows. Comprueba que son correctas y vuelve a lanzar el comando: salta lo ya hecho y solo reintenta lo que falta.'
+    Warn 'Si sigue con un error de certificado, prueba otra red (datos del movil) o desactiva un momento el antivirus o la VPN.'
+} elseif ($hasConfig) {
     Ok 'Listo. Todo configurado igual que el PC de origen.'
     Write-Host '   - Abre una terminal NUEVA para ver Starship. Prueba: fastfetch, lazygit, z <carpeta>'
     Write-Host '   - Si el dock/barra no salen, cierra sesion y vuelve a entrar una vez.'

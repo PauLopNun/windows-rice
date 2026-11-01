@@ -171,7 +171,7 @@ foreach ($id in $pkgs) {
     if ($id -eq 'Seelen.SeelenUI') { Stop-RiceApp 'seelen' }
     if ($id -eq 'Flow-Launcher.Flow-Launcher') { Get-Process -Name 'Flow.Launcher' -ErrorAction SilentlyContinue | Stop-Process -Force }
     Info "Desinstalando $id..."
-    winget uninstall --id $id --exact --silent --accept-source-agreements
+    winget uninstall --id $id --exact --silent --source winget --accept-source-agreements
     if ($LASTEXITCODE -eq 0) { Ok "$id desinstalado." }
     elseif ($LASTEXITCODE -eq -1978335107) {
         Info "$id es de usuario: reintento sin privilegios de administrador..."

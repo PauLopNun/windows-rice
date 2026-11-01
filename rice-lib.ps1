@@ -173,6 +173,10 @@ function Apply-RiceConfig([string]$cfgRoot, $state, [scriptblock]$save, [string[
         # destino: la ruta con comodin si existe ya en este PC; si no, la ruta exacta del PC origen
         $target = Resolve-RiceGlob (Expand-RicePath $it.path)
         if (-not $target) { $target = Expand-RicePath $it.literal }
+        # config que vive junto a un programa (Program Files): si el programa no esta instalado, no se crea su carpeta
+        if ($it.path -like '{PROGRAMFILES}*' -and -not (Test-Path -LiteralPath (Split-Path -Parent $target))) {
+            Write-Host "[!] $($it.key): $(Split-Path -Parent $target) no existe (el programa no esta instalado), lo salto." -ForegroundColor Yellow; continue
+        }
         if (@($state.configApplied | ForEach-Object { $_.target }) -contains $target) {
             Write-Host "[+] $($it.key): ya aplicada antes, no la piso." -ForegroundColor Green; continue
         }
@@ -404,7 +408,7 @@ function Uninstall-RiceUnelevated([string]$id) {
     $cmd = "$base.cmd"; $res = "$base.result"
     $wc = Get-Command winget -ErrorAction SilentlyContinue | Select-Object -First 1
     $wg = if ($wc -and $wc.CommandType -eq 'Alias') { $wc.Definition } elseif ($wc) { $wc.Source } else { Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\winget.exe' }
-    $lines = "@echo off", "`"$wg`" uninstall --id $id --exact --silent --accept-source-agreements", "echo %errorlevel%> `"$res`""
+    $lines = "@echo off", "`"$wg`" uninstall --id $id --exact --silent --source winget --accept-source-agreements", "echo %errorlevel%> `"$res`""
     Set-Content -Path $cmd -Value $lines -Encoding ASCII
     Start-Process explorer.exe -ArgumentList "`"$cmd`""
     for ($i = 0; $i -lt 100 -and -not (Test-Path $res); $i++) { Start-Sleep -Seconds 3 }
