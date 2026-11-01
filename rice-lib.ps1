@@ -349,7 +349,11 @@ function Start-RiceUnelevated([string]$target) { Start-Process explorer.exe -Arg
 
 function Start-RiceApps([switch]$NoSeelen) {
     $seelen = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($seelen -and -not $NoSeelen) { Start-RiceUnelevated "shell:AppsFolder\$($seelen.AppID)" }
+    if ($seelen -and -not $NoSeelen) {
+        # Seelen lee el modo claro/oscuro de Windows al arrancar: si ya estaba abierto, se reinicia para que coja el modo oscuro
+        Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2
+        Start-RiceUnelevated "shell:AppsFolder\$($seelen.AppID)"
+    }
     foreach ($a in 'flow', 'powertoys') { $e = Find-RiceExe $a; if ($e) { Start-RiceUnelevated $e } }
     $ev = Find-RiceExe 'everything'; if ($ev) { Start-Process explorer.exe -ArgumentList "`"$ev`"" }
 }
