@@ -169,6 +169,13 @@ foreach ($id in $pkgs) {
     if (-not $id) { continue }
     if ($id -eq 'Seelen.SeelenUI') { Stop-RiceApp 'seelen' }
     if ($id -eq 'Flow-Launcher.Flow-Launcher') { Get-Process -Name 'Flow.Launcher' -ErrorAction SilentlyContinue | Stop-Process -Force }
+    if ($id -eq '9NBLGGH516XP') {   # EarTrumpet (Microsoft Store)
+        Info 'Desinstalando EarTrumpet...'
+        Get-Process -Name 'EarTrumpet' -ErrorAction SilentlyContinue | Stop-Process -Force
+        Get-AppxPackage -Name '*EarTrumpet*' -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue
+        if (Get-AppxPackage -Name '*EarTrumpet*' -ErrorAction SilentlyContinue) { Warn 'EarTrumpet: no se pudo quitar, hazlo desde Configuracion > Aplicaciones.' } else { Ok 'EarTrumpet desinstalado.' }
+        continue
+    }
     Info "Desinstalando $id..."
     winget uninstall --id $id --exact --silent --accept-source-agreements
     if ($LASTEXITCODE -eq 0) { Ok "$id desinstalado." }

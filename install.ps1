@@ -124,7 +124,8 @@ $packages = @(
     @{ Id = 'Microsoft.PowerShell';        Name = 'PowerShell 7' }
     @{ Id = 'DEVCOM.JetBrainsMonoNerdFont';Name = 'JetBrainsMono Nerd Font' }
     @{ Id = 'Starship.Starship';           Name = 'Starship' }
-    @{ Id = 'File-New-Project.EarTrumpet'; Name = 'EarTrumpet (volumen por app)' }
+    # EarTrumpet: la fuente 'winget' falla (tiempo de espera al bajar su MSIX); la Microsoft Store si funciona
+    @{ Id = '9NBLGGH516XP'; Name = 'EarTrumpet (volumen por app)'; Source = 'msstore'; Appx = '*EarTrumpet*' }
 )
 if (-not $NoCli) {
     $packages += @(
@@ -138,26 +139,30 @@ if (-not $NoCli) {
 
 if ($NoSeelen) { $packages = @($packages | Where-Object { $_.Id -ne 'Seelen.SeelenUI' }) }
 
-function Test-Installed([string]$id) {
-    winget list --id $id --exact --accept-source-agreements *> $null
+function Test-Installed($pkg) {
+    if ($pkg.Appx) { return [bool](Get-AppxPackage -Name $pkg.Appx -ErrorAction SilentlyContinue) }
+    winget list --id $pkg.Id --exact --accept-source-agreements *> $null
     return ($LASTEXITCODE -eq 0)
 }
 
 $desktopBefore = Get-RiceDesktopLinks   # para no dejar accesos directos nuevos en el escritorio
 
 foreach ($pkg in $packages) {
-    if (Test-Installed $pkg.Id) {
+    if (Test-Installed $pkg) {
         Ok "$($pkg.Name) ya estaba instalado, no lo toco."
         continue
     }
     Info "Instalando $($pkg.Name)..."
-    winget install --id $pkg.Id --exact --silent --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -eq 0 -or (Test-Installed $pkg.Id)) {
+    $wargs = @('install', '--id', $pkg.Id, '--exact', '--silent', '--accept-package-agreements', '--accept-source-agreements')
+    if ($pkg.Source) { $wargs += @('--source', $pkg.Source) }
+    winget @wargs
+    $code = $LASTEXITCODE   # se guarda ya: Test-Installed lo sobrescribe
+    if ($code -eq 0 -or (Test-Installed $pkg)) {
         Ok "$($pkg.Name) instalado."
         if ($state.installedPackages -notcontains $pkg.Id) { $state.installedPackages += $pkg.Id }
         Save-State
     } else {
-        Warn "Fallo instalando $($pkg.Name) (codigo $LASTEXITCODE). Prueba: winget search `"$($pkg.Name)`""
+        Warn "Fallo instalando $($pkg.Name) (codigo $code). Puedes reintentar: winget install --id $($pkg.Id) --exact"
     }
 }
 
