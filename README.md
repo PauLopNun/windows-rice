@@ -105,6 +105,18 @@ Se crea `config\` con tus ajustes de Seelen, Flow, PowerToys, Everything y Stars
 - El dock de Seelen **no** se exporta (llevaría tus apps ancladas).
 - ⚠️ El export avisa si algún archivo menciona claves, contraseñas o tokens. Revísalos antes de compartir.
 
+## 🌗 Modo oscuro / claro
+
+El dock y la barra de Seelen siguen el modo de Windows, y solo lo leen al arrancar. El aspecto del pack es el **oscuro** (barra negra redondeada). Si a alguien le sale claro, o quiere cambiar:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\theme.ps1"              # alterna oscuro <-> claro
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\theme.ps1" -Mode dark   # oscuro
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\theme.ps1" -Mode light  # claro
+```
+
+No necesita administrador. Cambia Windows y reinicia Seelen para que lo coja al momento. Flow y la Terminal mantienen su tema Catppuccin.
+
 ## 🧹 Quitarlo todo
 
 ```powershell
