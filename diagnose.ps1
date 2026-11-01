@@ -3,7 +3,7 @@
   Recoge lo necesario para entender por que algo no se ve bien (dock, barra, iconos) y lo copia al portapapeles.
 
   Uso, sin administrador:
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/diagnose.ps1 | iex"
+    irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/diagnose.ps1 | iex
   o, si ya tienes el pack:
     powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\diagnose.ps1"
 
