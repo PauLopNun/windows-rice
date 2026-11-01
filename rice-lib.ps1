@@ -28,7 +28,7 @@ $script:RiceItems = @(
 $script:AppProcs = @{
     seelen     = @('seelen*', 'slu-*')
     flow       = @('Flow.Launcher')
-    powertoys  = @('PowerToys*')
+    powertoys  = @('PowerToys*', 'Microsoft.CmdPal*')
     everything = @('Everything*')
     starship   = @()
 }
@@ -230,8 +230,13 @@ function Apply-RiceWallpaper([string]$cfgRoot, $state, [scriptblock]$save) {
     $dst = Join-Path $dstDir $m.wallpaper
     Copy-Item $src $dst -Force
     $d = Get-ItemProperty 'HKCU:\Control Panel\Desktop'
-    $state.wallpaper = [pscustomobject]@{ file = $dst; prev = $d.WallPaper; prevStyle = $d.WallpaperStyle; prevTile = $d.TileWallpaper }
+    $wk = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers'
+    $prevBg = (Get-ItemProperty $wk -ErrorAction SilentlyContinue).BackgroundType
+    $state.wallpaper = [pscustomobject]@{ file = $dst; prev = $d.WallPaper; prevStyle = $d.WallpaperStyle; prevTile = $d.TileWallpaper; prevBg = $prevBg }
     & $save
+    # si Windows esta en modo "Presentacion" (2) o Spotlight, el fondo fijado se pierde: pasar a imagen fija (0)
+    if (-not (Test-Path $wk)) { New-Item $wk -Force | Out-Null }
+    Set-ItemProperty $wk -Name BackgroundType -Value 0 -Type DWord
     Set-ItemProperty 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value '10'
     Set-ItemProperty 'HKCU:\Control Panel\Desktop' -Name TileWallpaper  -Value '0'
     Set-RiceWallpaper $dst
@@ -243,6 +248,7 @@ function Restore-RiceWallpaper($state) {
     if (-not $w) { return }
     if ($w.prevStyle) { Set-ItemProperty 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value $w.prevStyle }
     if ($w.prevTile)  { Set-ItemProperty 'HKCU:\Control Panel\Desktop' -Name TileWallpaper  -Value $w.prevTile }
+    if ($null -ne $w.prevBg) { Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers' -Name BackgroundType -Value $w.prevBg -Type DWord }
     if ($w.prev -and (Test-Path -LiteralPath $w.prev)) { Set-RiceWallpaper $w.prev }
     if ($w.file -and (Test-Path -LiteralPath $w.file)) {
         Remove-Item -LiteralPath $w.file -Force
@@ -266,27 +272,35 @@ public static extern System.IntPtr SendMessageTimeout(System.IntPtr h, uint m, S
 
 function Apply-RiceTweaks($state, [scriptblock]$save) {
     if (-not $state.tweaks) { $state.tweaks = @() }
+    $okN = 0; $failed = @()
     foreach ($t in $script:Tweaks) {
-        if (-not (Test-Path $t.Path)) { New-Item -Path $t.Path -Force | Out-Null }
-        $known = @($state.tweaks) | Where-Object { $_.path -eq $t.Path -and $_.name -eq $t.Name }
-        if (-not $known) {
+        try {
+            if (-not (Test-Path $t.Path)) { New-Item -Path $t.Path -Force | Out-Null }
             $cur = Get-ItemProperty -Path $t.Path -Name $t.Name -ErrorAction SilentlyContinue
-            $state.tweaks = @($state.tweaks) + [pscustomobject]@{
-                path = $t.Path; name = $t.Name; existed = [bool]$cur; prev = $(if ($cur) { $cur.($t.Name) } else { $null })
+            Set-ItemProperty -Path $t.Path -Name $t.Name -Value $t.Value -Type DWord -ErrorAction Stop
+            # solo se apunta (para deshacerlo) lo que de verdad se pudo cambiar
+            $known = @($state.tweaks) | Where-Object { $_.path -eq $t.Path -and $_.name -eq $t.Name }
+            if (-not $known) {
+                $state.tweaks = @($state.tweaks) + [pscustomobject]@{
+                    path = $t.Path; name = $t.Name; existed = [bool]$cur; prev = $(if ($cur) { $cur.($t.Name) } else { $null })
+                }
+                & $save
             }
-            & $save
-        }
-        Set-ItemProperty -Path $t.Path -Name $t.Name -Value $t.Value -Type DWord
+            $okN++
+        } catch { $failed += $t.Name }
     }
     Broadcast-RiceSettings
-    Write-Host '[+] Windows: modo oscuro, extensiones visibles, sin botones de widgets/chat/vistas.' -ForegroundColor Green
+    Write-Host "[+] Windows: $okN ajustes aplicados (modo oscuro, extensiones visibles, barra de tareas limpia)." -ForegroundColor Green
+    if ($failed.Count) { Write-Host "[!] Windows protege estos ajustes y no se pudieron cambiar (no pasa nada): $($failed -join ', ')" -ForegroundColor Yellow }
 }
 
 function Restore-RiceTweaks($state) {
     foreach ($t in @($state.tweaks)) {
         if (-not $t) { continue }
-        if ($t.existed) { Set-ItemProperty -Path $t.path -Name $t.name -Value $t.prev -Type DWord }
-        else { Remove-ItemProperty -Path $t.path -Name $t.name -ErrorAction SilentlyContinue }
+        try {
+            if ($t.existed) { Set-ItemProperty -Path $t.path -Name $t.name -Value $t.prev -Type DWord -ErrorAction Stop }
+            else { Remove-ItemProperty -Path $t.path -Name $t.name -ErrorAction Stop }
+        } catch { }
     }
     if (@($state.tweaks).Count) { Broadcast-RiceSettings; Write-Host '[+] Ajustes de Windows devueltos.' -ForegroundColor Green }
 }

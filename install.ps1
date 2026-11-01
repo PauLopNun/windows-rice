@@ -96,14 +96,22 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 # ---------------------------------------------------------------- punto de restauracion
 if (-not $SkipRestorePoint) {
     Info 'Creando punto de restauracion (puede tardar un poco)...'
-    try {
+    # En un job con limite de tiempo: si el servicio de Windows no responde, Checkpoint-Computer se queda colgado para siempre.
+    $job = Start-Job -ScriptBlock {
         Enable-ComputerRestore -Drive "$env:SystemDrive\" -ErrorAction SilentlyContinue
         Checkpoint-Computer -Description 'Antes de windows-rice' -RestorePointType MODIFY_SETTINGS -ErrorAction Stop
-        Ok 'Punto de restauracion creado.'
-    } catch {
-        Warn "No se pudo crear el punto de restauracion: $($_.Exception.Message)"
-        Warn 'Windows solo permite uno cada 24h. Sigo igualmente.'
     }
+    if (Wait-Job $job -Timeout 90) {
+        try { Receive-Job $job -ErrorAction Stop | Out-Null; Ok 'Punto de restauracion creado.' }
+        catch {
+            Warn "No se pudo crear el punto de restauracion: $($_.Exception.Message)"
+            Warn 'Windows solo permite uno cada 24h. Sigo igualmente.'
+        }
+    } else {
+        Stop-Job $job -ErrorAction SilentlyContinue
+        Warn 'El punto de restauracion tardaba demasiado (Windows no respondia). Sigo sin el.'
+    }
+    Remove-Job $job -Force -ErrorAction SilentlyContinue
 }
 
 # ---------------------------------------------------------------- paquetes

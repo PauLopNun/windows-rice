@@ -57,7 +57,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
-| 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botones de widgets/chat/vistas |
+| 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
 | ⚡ **Autoarranque** | Flow y Everything arrancan con Windows; se abre todo al terminar |
 
 ## 📊 Rendimiento
