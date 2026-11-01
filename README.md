@@ -34,6 +34,8 @@ Pedirá permisos de administrador, descargará el pack a `%USERPROFILE%\windows-
 4. Si el antivirus bloquea algo, añade una excepción para la carpeta `%USERPROFILE%\windows-rice` y repite.
 5. Si algo no se ve bien (dock, barra, iconos), ejecuta el diagnóstico (solo lee, no cambia nada, copia el resultado al portapapeles y quita tu usuario) y pégalo en el *issue*:
    `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/diagnose.ps1 | iex`
+6. Si la barra superior de Seelen no tiene los módulos del pack (energía, CPU/RAM…) o están en otro orden, repárala (hace copia de la tuya y reinicia Seelen; con `-ResetDock` reconstruye también el dock):
+   `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/repair-seelen.ps1 | iex`
 
 Si sigue fallando, copia el mensaje de error **completo** (la línea roja entera) y abre un *issue* en el repo.
 </details>
