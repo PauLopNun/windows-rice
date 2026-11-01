@@ -327,6 +327,8 @@ function Set-RiceAutostart($state, [scriptblock]$save, [switch]$NoSeelen) {
         $sa = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($sa) { $want += @{ Name = 'windows-rice-seelen'; Exe = 'explorer.exe'; Args = " shell:AppsFolder\$($sa.AppID)" } }
     }
+    $et = Get-StartApps -Name '*EarTrumpet*' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($et) { $want += @{ Name = 'windows-rice-eartrumpet'; Exe = 'explorer.exe'; Args = " shell:AppsFolder\$($et.AppID)" } }
     foreach ($w in $want) {
         if (-not $w.Exe) { continue }
         Set-ItemProperty $script:RunKey -Name $w.Name -Value ('"{0}"{1}' -f $w.Exe, $w.Args)
@@ -348,6 +350,8 @@ function Start-RiceApps([switch]$NoSeelen) {
     if ($seelen -and -not $NoSeelen) { Start-RiceUnelevated "shell:AppsFolder\$($seelen.AppID)" }
     foreach ($a in 'flow', 'powertoys') { $e = Find-RiceExe $a; if ($e) { Start-RiceUnelevated $e } }
     $ev = Find-RiceExe 'everything'; if ($ev) { Start-Process explorer.exe -ArgumentList "`"$ev`"" }
+    $et = Get-StartApps -Name '*EarTrumpet*' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($et) { Start-RiceUnelevated "shell:AppsFolder\$($et.AppID)" }
 }
 
 # ------------------------------------------------------------------ plugins de Flow Launcher

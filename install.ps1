@@ -124,6 +124,7 @@ $packages = @(
     @{ Id = 'Microsoft.PowerShell';        Name = 'PowerShell 7' }
     @{ Id = 'DEVCOM.JetBrainsMonoNerdFont';Name = 'JetBrainsMono Nerd Font' }
     @{ Id = 'Starship.Starship';           Name = 'Starship' }
+    @{ Id = 'File-New-Project.EarTrumpet'; Name = 'EarTrumpet (volumen por app)' }
 )
 if (-not $NoCli) {
     $packages += @(

@@ -53,6 +53,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🚀 **Flow Launcher** | `Alt+Espacio` abre apps, archivos, calcula y busca en la web. Tema Catppuccin Mocha. Busca archivos con **Everything** (instantáneo) |
 | 🔌 **Plugins de Flow** | Clipboard+ → `cbp` · Emoji → `e <nombre>` · Windows Settings → `s <ajuste>` · Window Walker y Colors funcionan al escribir directamente |
 | 🧰 **PowerToys** | Cuentagotas, copiar texto de imágenes, vista previa con Espacio, FancyZones, PowerRename… Arranca con Windows. Vienen **desactivados** los módulos que vigilan el ratón siempre (Find My Mouse, Mouse Highlighter) y Shortcut Guide |
+| 🔊 **EarTrumpet** | Mezclador de volumen **por aplicación** (Spotify aparte de Chrome) desde la bandeja. Un vídeo concreto de YouTube no se puede separar de Chrome: Windows controla el volumen por programa |
 | 🔎 **Everything** | Búsqueda instantánea de archivos; Flow la usa por debajo (por eso arranca con Windows) |
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |

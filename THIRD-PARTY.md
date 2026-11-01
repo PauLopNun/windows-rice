@@ -12,5 +12,6 @@ Este repo solo contiene scripts y ajustes. Las aplicaciones **no se redistribuye
 | Plugin Colors | [Flow-Launcher/Flow.Launcher.Plugin.Color](https://github.com/Flow-Launcher/Flow.Launcher.Plugin.Color) | ver su repo |
 | Plugin Search Unicode & Emoji | [blueset/flow-search-unicode](https://github.com/blueset/flow-search-unicode) | ver su repo |
 | Fondo `assets/wallpaper.jpg` | generado para este repo con la paleta Catppuccin | MIT (como el resto) |
+| EarTrumpet (se instala con winget) | [File-New-Project/EarTrumpet](https://github.com/File-New-Project/EarTrumpet) | ver su repo |
 
 Los plugins se descargan al instalar, con versión fija (`plugins.json`) y comprobación de SHA256.
