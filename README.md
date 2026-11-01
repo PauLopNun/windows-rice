@@ -19,10 +19,22 @@ Paleta **Catppuccin Mocha** en todo · se instala con un script · se quita con 
 Abre **PowerShell** y pega:
 
 ```powershell
-irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/get.ps1 | iex
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/get.ps1 | iex"
 ```
 
 Pedirá permisos de administrador, descargará el pack a `%USERPROFILE%\windows-rice`, instalará todo y lo dejará configurado. **No tienes que tocar nada más.**
+
+<details>
+<summary>Me da error («acceso denegado», «la ejecución de scripts está deshabilitada»…)</summary>
+
+1. Usa **exactamente** el comando de arriba (lleva `-ExecutionPolicy Bypass`): Windows trae por defecto los scripts bloqueados y sin eso falla.
+2. Si no se abre el aviso de administrador: clic derecho en Inicio → **Terminal (Administrador)** y pega el comando ahí.
+3. Si aun así falla: descarga el ZIP del repo (*Code → Download ZIP*), descomprímelo y ejecuta dentro de la carpeta, en PowerShell como administrador:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`
+4. Si el antivirus bloquea algo, añade una excepción para la carpeta `%USERPROFILE%\windows-rice` y repite.
+
+Si sigue fallando, copia el mensaje de error **completo** (la línea roja entera) y abre un *issue* en el repo.
+</details>
 
 <details>
 <summary>¿Prefieres no ejecutar un one-liner? Instalación manual</summary>
