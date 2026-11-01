@@ -8,7 +8,7 @@ $script:UserTokens = [ordered]@{
 $script:TextExt = @('.json', '.yml', '.yaml', '.css', '.scss', '.toml', '.ini', '.txt', '.xml', '.config', '.js')
 $script:ExcludeDirs  = @('logs', 'Logs', 'log', 'cache', 'Cache', 'Code Cache', 'GPUCache', 'EBWebView', 'Temp', 'tmp',
                          'Updates', 'RunnerLogs', 'crashpad', 'Crashpad')
-$script:ExcludeFiles = @('*.log', '*.lock', '*.tmp', '*History*', 'UserSelectedRecord.json', '*.bak*', '*.pre-rice', '*.etl',
+$script:ExcludeFiles = @('*.log', '*.lock', '*.cli-lock', '*.tmp', '*History*', 'UserSelectedRecord.json', '*.bak*', '*.pre-rice', '*.etl',
                          'settings-placement.json', '*telemetry*', 'last_version_run.json')
 
 # Apps cuya config se viaja. Path admite {APPDATA} {LOCALAPPDATA} {USERPROFILE} {PROGRAMFILES} y comodin *.

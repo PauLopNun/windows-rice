@@ -356,6 +356,54 @@
         "SearchDelayTime": null,
         "Disabled": false,
         "HomeDisabled": false
+      },
+      "ff9385ec-0e95-452f-bef2-62456f66fe0f": {
+        "ID": "ff9385ec-0e95-452f-bef2-62456f66fe0f",
+        "Name": "Clipboard\u002B",
+        "Version": "2.4.6",
+        "ActionKeywords": [
+          "cbp"
+        ],
+        "Priority": 0,
+        "SearchDelayTime": null,
+        "Disabled": false,
+        "HomeDisabled": false
+      },
+      "9B36CE6181FC47FBB597AA2C29CD9B0A": {
+        "ID": "9B36CE6181FC47FBB597AA2C29CD9B0A",
+        "Name": "Colors",
+        "Version": "3.0.0",
+        "ActionKeywords": [
+          "*"
+        ],
+        "Priority": 0,
+        "SearchDelayTime": null,
+        "Disabled": false,
+        "HomeDisabled": false
+      },
+      "BB55C11CB9FB4AAF81B670D9FF0BFBEE": {
+        "ID": "BB55C11CB9FB4AAF81B670D9FF0BFBEE",
+        "Name": "Search Unicode \u2013 Emoji",
+        "Version": "1.0.4",
+        "ActionKeywords": [
+          "e"
+        ],
+        "Priority": 0,
+        "SearchDelayTime": null,
+        "Disabled": false,
+        "HomeDisabled": false
+      },
+      "F737A9223560B3C6833B5FFB8CDF78E5": {
+        "ID": "F737A9223560B3C6833B5FFB8CDF78E5",
+        "Name": "Window Walker",
+        "Version": "3.1.0",
+        "ActionKeywords": [
+          "*"
+        ],
+        "Priority": 0,
+        "SearchDelayTime": null,
+        "Disabled": false,
+        "HomeDisabled": false
       }
     }
   }

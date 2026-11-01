@@ -50,10 +50,10 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | | |
 |---|---|
 | 🖥️ **Seelen UI** | Dock y barra superior estilo macOS con CPU y RAM, colores que salen del fondo |
-| 🚀 **Flow Launcher** | `Alt+Espacio` abre apps, archivos, calcula y busca en la web. Tema Catppuccin Mocha |
-| 🔌 **Plugins de Flow** | Clipboard+ (historial del portapapeles), Window Walker (saltar entre ventanas), Windows Settings, Colors, Search Unicode & Emoji |
-| 🧰 **PowerToys** | Cuentagotas, copiar texto de imágenes, vista previa con Espacio, ventana siempre encima… |
-| 🔎 **Everything** | Búsqueda instantánea de archivos (Flow la usa por debajo) |
+| 🚀 **Flow Launcher** | `Alt+Espacio` abre apps, archivos, calcula y busca en la web. Tema Catppuccin Mocha. Busca archivos con **Everything** (instantáneo) |
+| 🔌 **Plugins de Flow** | Clipboard+ → `cbp` · Emoji → `e <nombre>` · Windows Settings → `s <ajuste>` · Window Walker y Colors funcionan al escribir directamente |
+| 🧰 **PowerToys** | Cuentagotas, copiar texto de imágenes, vista previa con Espacio, FancyZones, PowerRename… Arranca con Windows. Vienen **desactivados** los módulos que vigilan el ratón siempre (Find My Mouse, Mouse Highlighter) y Shortcut Guide |
+| 🔎 **Everything** | Búsqueda instantánea de archivos; Flow la usa por debajo (por eso arranca con Windows) |
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
@@ -115,6 +115,8 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 
 - Requiere Windows 10/11 con `winget` (App Installer); si falta, el script intenta registrarlo.
 - Seelen se instala como MSIX. Su tema y ajustes globales los eliges tú desde sus ajustes (`slu.exe settings`) y luego puedes volver a exportar.
+- **Temas de Seelen:** el pack usa el tema por defecto para mantener la paleta Catppuccin coherente con Flow, Terminal y el fondo. En [seelen.io/resources](https://seelen.io/resources) hay temas de la comunidad (por ejemplo *Aurora Glass*, *Neo Glass*, *Compact Design*); cada uno trae su propia paleta, así que pruébalos tú. Si te gusta uno, vuelve a ejecutar `export-config.ps1`.
+- Los números de RAM son de un PC concreto; mide los tuyos con el Administrador de tareas.
 - Créditos y licencias de terceros en [THIRD-PARTY.md](THIRD-PARTY.md).
 
 ## Licencia

@@ -1,5 +1,5 @@
 ﻿{
-    "exportedAt":  "2026-11-01T23:11:34",
+    "exportedAt":  "2026-11-01T23:30:28",
     "items":  [
                   {
                       "key":  "seelen-roaming",
@@ -23,7 +23,7 @@
                       "path":  "{APPDATA}\\FlowLauncher",
                       "literal":  "{APPDATA}\\FlowLauncher",
                       "isFile":  false,
-                      "bytes":  26193
+                      "bytes":  69453
                   },
                   {
                       "key":  "powertoys",
@@ -31,7 +31,15 @@
                       "path":  "{LOCALAPPDATA}\\Microsoft\\PowerToys",
                       "literal":  "{LOCALAPPDATA}\\Microsoft\\PowerToys",
                       "isFile":  false,
-                      "bytes":  16782
+                      "bytes":  17115
+                  },
+                  {
+                      "key":  "everything-user",
+                      "app":  "everything",
+                      "path":  "{APPDATA}\\Everything\\Everything.ini",
+                      "literal":  "{APPDATA}\\Everything\\Everything.ini",
+                      "isFile":  true,
+                      "bytes":  20651
                   },
                   {
                       "key":  "everything-pf",
@@ -39,7 +47,7 @@
                       "path":  "{PROGRAMFILES}\\Everything\\Everything.ini",
                       "literal":  "{PROGRAMFILES}\\Everything\\Everything.ini",
                       "isFile":  true,
-                      "bytes":  197
+                      "bytes":  192
                   },
                   {
                       "key":  "starship",
@@ -47,7 +55,7 @@
                       "path":  "{USERPROFILE}\\.config\\starship.toml",
                       "literal":  "{USERPROFILE}\\.config\\starship.toml",
                       "isFile":  true,
-                      "bytes":  7727
+                      "bytes":  7345
                   }
               ],
     "wallpaper":  "wallpaper.jpg",

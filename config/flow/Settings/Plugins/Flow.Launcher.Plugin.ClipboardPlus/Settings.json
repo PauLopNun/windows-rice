@@ -1,0 +1,23 @@
+{
+  "ClearKeyword": "clear",
+  "MaxRecords": 10000,
+  "RecordOrder": 0,
+  "ActionTop": true,
+  "ShowNotification": true,
+  "SyncWindowsClipboardHistory": false,
+  "UseWindowsClipboardHistoryOnly": false,
+  "ClickAction": 0,
+  "DefaultRichTextCopyOption": 0,
+  "DefaultImageCopyOption": 0,
+  "DefaultFilesCopyOption": 0,
+  "CacheImages": false,
+  "CacheFormat": "yyyy-MM-dd-hhmmss-app",
+  "EncryptData": false,
+  "EncryptKey": "891e3003324a46a29ea4ce0a14f12462",
+  "KeepText": false,
+  "TextKeepTime": 0,
+  "KeepImages": false,
+  "ImagesKeepTime": 0,
+  "KeepFiles": false,
+  "FilesKeepTime": 0
+}
