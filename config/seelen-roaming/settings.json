@@ -1,1 +1,1 @@
-{"byWidget":{"@seelen/wallpaper-manager":{"enabled":false},"@seelen/fancy-toolbar":{"hideMode":"Never"},"@seelen/weg":{"hideMode":"Always","delayToShow":300}},"activeThemes":["@default/theme","@paulopnun/rice-wave"]}
+{"byWidget":{"@seelen/wallpaper-manager":{"enabled":false},"@seelen/fancy-toolbar":{"hideMode":"OnOverlap","delayToShow":700},"@seelen/weg":{"hideMode":"OnOverlap","delayToShow":700}},"activeThemes":["@default/theme","@paulopnun/rice-wave"]}
