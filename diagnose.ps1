@@ -91,6 +91,14 @@ if (Test-Path $log) {
     Line ''; Line 'Barra/dock listos por monitor:'; $mons | ForEach-Object { Line ('   ' + $_.Substring(0, [Math]::Min(150, $_.Length))) }
 } else { Line 'No hay registro de Seelen (nunca se ha abierto?)' }
 
+Sec 'Fondo de escritorio'
+$dk = Get-ItemProperty 'HKCU:\Control Panel\Desktop'
+Line ("WallPaper: " + $dk.WallPaper)
+$wpx = $dk.WallPaper
+Line ("El archivo existe: " + $(if ($wpx -and (Test-Path -LiteralPath $wpx)) { "si ($([int]((Get-Item -LiteralPath $wpx).Length/1KB)) KB)" } else { 'NO' }))
+Line ("Estilo=" + $dk.WallpaperStyle + " | tipo de fondo=" + (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers').BackgroundType + "   (0 = imagen, 2 = presentacion, 3 = Spotlight)")
+Line ("Carpeta Imagenes en OneDrive: " + ([Environment]::GetFolderPath('MyPictures') -match 'OneDrive'))
+
 Sec 'Windows Rice'
 $st = Join-Path $env:LOCALAPPDATA 'windows-rice\state.json'
 if (Test-Path $st) { $s = Get-Content $st -Raw | ConvertFrom-Json

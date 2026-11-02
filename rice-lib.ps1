@@ -231,17 +231,25 @@ function Apply-RiceWallpaper([string]$cfgRoot, $state, [scriptblock]$save) {
     $mf = Join-Path $cfgRoot 'manifest.json'
     if (-not (Test-Path $mf)) { return }
     $m = Get-Content $mf -Raw | ConvertFrom-Json
-    if (-not $m.wallpaper -or $state.wallpaper) { return }
+    if (-not $m.wallpaper) { return }
     $src = Join-Path (Join-Path $cfgRoot 'wallpaper') $m.wallpaper
     if (-not (Test-Path $src)) { return }
-    $dstDir = Join-Path ([Environment]::GetFolderPath('MyPictures')) 'windows-rice'
+    # NO en la carpeta Imagenes: en muchos PC esta redirigida a OneDrive y el archivo puede quedar "solo en la nube" (Windows no lo carga)
+    $dstDir = Join-Path $env:LOCALAPPDATA 'windows-rice\wallpaper'
     New-Item -ItemType Directory -Force -Path $dstDir | Out-Null
     $dst = Join-Path $dstDir $m.wallpaper
+    # si ya se puso y sigue puesto, no se toca; si algo lo cambio (o el archivo falta), se vuelve a poner
+    $curWp = (Get-ItemProperty 'HKCU:\Control Panel\Desktop').WallPaper
+    if ($state.wallpaper -and $state.wallpaper.file -and (Test-Path -LiteralPath $state.wallpaper.file) -and ($curWp -eq $state.wallpaper.file)) { return }
     Copy-Item $src $dst -Force
     $d = Get-ItemProperty 'HKCU:\Control Panel\Desktop'
     $wk = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers'
     $prevBg = (Get-ItemProperty $wk -ErrorAction SilentlyContinue).BackgroundType
-    $state.wallpaper = [pscustomobject]@{ file = $dst; prev = $d.WallPaper; prevStyle = $d.WallpaperStyle; prevTile = $d.TileWallpaper; prevBg = $prevBg }
+    if ($state.wallpaper) {   # re-aplicar: se conserva lo ORIGINAL del usuario para poder devolverlo al desinstalar
+        $state.wallpaper = [pscustomobject]@{ file = $dst; prev = $state.wallpaper.prev; prevStyle = $state.wallpaper.prevStyle; prevTile = $state.wallpaper.prevTile; prevBg = $state.wallpaper.prevBg }
+    } else {
+        $state.wallpaper = [pscustomobject]@{ file = $dst; prev = $d.WallPaper; prevStyle = $d.WallpaperStyle; prevTile = $d.TileWallpaper; prevBg = $prevBg }
+    }
     & $save
     # si Windows esta en modo "Presentacion" (2) o Spotlight, el fondo fijado se pierde: pasar a imagen fija (0)
     if (-not (Test-Path $wk)) { New-Item $wk -Force | Out-Null }
