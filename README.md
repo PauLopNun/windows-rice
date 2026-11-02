@@ -180,6 +180,10 @@ Windows tiene el repositorio de WMI dañado y Seelen registra un error de WMI al
 
 Seelen oculta la barra y el dock de un monitor que tenga una aplicación a **pantalla completa** (Discord, un vídeo, un juego). Sal de pantalla completa y reaparecen.
 
+**En un juego en ventana sin bordes se ve la barra o el dock**
+
+El pack deja la barra superior y el dock en «ocultar solo si una ventana los tapa» (`hideMode: OnOverlap`) y con 700 ms de retraso para reaparecer al tocar el borde. Si el juego sigue dejando ver la barra, comprueba que su resolución es la de tu pantalla: algunos juegos arrancan en una más pequeña y la ventana no tapa la barra. Para cambiar el retraso, edita `delayToShow` en `%APPDATA%com.seelen.seelen-uisettings.json`.
+
 **Error de certificado `0x8a15005e` o «msstore» al instalar**
 
 Suele ser la fecha y hora de Windows, una VPN, el antivirus o una red de empresa. El instalador ya usa solo el origen `winget` para evitarlo; si aun así falla, prueba otra red y vuelve a lanzar el comando (salta lo ya hecho).
