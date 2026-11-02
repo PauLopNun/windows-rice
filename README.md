@@ -143,6 +143,11 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 | `install.ps1` / `uninstall.ps1` | Instala y configura / lo deshace |
 | `export-config.ps1` | Guarda tu config en `config\` |
 | `rice-lib.ps1` | Funciones compartidas |
+| `theme.ps1` | Cambia entre modo oscuro y claro (Windows, Seelen y cursor) |
+| `cursor-watcher.ps1` | Vigilante oculto que cambia el cursor al cambiar de modo |
+| `cursor.json` | Cursores Bibata (oscuro y claro) con versión fija y SHA256 |
+| `repair-seelen.ps1` | Restaura la barra superior de Seelen del pack y actualiza WebView2 |
+| `diagnose.ps1` | Diagnóstico de solo lectura para pedir ayuda |
 | `plugins.json` | Plugins de Flow con versión fija y SHA256 |
 | `config\` | Ajustes que se aplican al instalar |
 | `assets\` | Fondo de pantalla |
