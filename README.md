@@ -29,8 +29,8 @@ Pedirá permisos de administrador, descargará el pack a `%USERPROFILE%\windows-
 
 1. Usa **exactamente** el comando de arriba (lleva `-ExecutionPolicy Bypass`): Windows trae por defecto los scripts bloqueados y sin eso falla.
 2. Si no se abre el aviso de administrador: clic derecho en Inicio → **Terminal (Administrador)** y pega el comando ahí.
-3. Si aun así falla: descarga el ZIP del repo (*Code → Download ZIP*), descomprímelo y ejecuta dentro de la carpeta, en PowerShell como administrador:
-   `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`
+3. Si aun así falla (o la ventana se cierra sola): descarga el ZIP del repo (*Code → Download ZIP*), descomprímelo y haz **doble clic en `instalar.bat`**. Pide administrador solo y no se cierra al terminar, así se ve cualquier error. (No uses clic derecho → «Ejecutar con PowerShell» sobre `install.ps1`: sin ser administrador se cierra al instante.)
+   Alternativa en PowerShell como administrador, dentro de la carpeta: `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`
 4. Si el antivirus bloquea algo, añade una excepción para la carpeta `%USERPROFILE%\windows-rice` y repite.
 5. Si algo no se ve bien (dock, barra, iconos), ejecuta el diagnóstico (solo lee, no cambia nada, copia el resultado al portapapeles y quita tu usuario) y pégalo en el *issue*:
    `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/diagnose.ps1 | iex`
