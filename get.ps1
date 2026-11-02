@@ -20,11 +20,28 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 if (-not $isAdmin) {
     Write-Host '[*] Pidiendo permisos de administrador (acepta el aviso de Windows)...' -ForegroundColor Cyan
     $cmd = "irm https://raw.githubusercontent.com/$repo/$branch/get.ps1 | iex"
+    $psArgs = "-NoProfile -NoExit -ExecutionPolicy Bypass -Command `"$cmd`""
+    $ok = $false
+    # 1) Directo con .NET (ShellExecute + runas): no pasa por Start-Process, que en algunos PCs falla con
+    #    "ResourceUnavailable ... UseShellExecute" segun el entorno de la sesion.
     try {
-        Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile', '-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $cmd -ErrorAction Stop
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe')
+        $psi.Arguments = $psArgs
+        $psi.UseShellExecute = $true
+        $psi.Verb = 'runas'
+        [void][System.Diagnostics.Process]::Start($psi); $ok = $true
     } catch {
-        Write-Host "[!] No se pudo abrir PowerShell como administrador: $($_.Exception.Message)" -ForegroundColor Yellow
-        Write-Host '    Abre "Terminal (Administrador)" desde el menu Inicio (clic derecho) y vuelve a pegar el comando.' -ForegroundColor Yellow
+        # 2) Alternativa: Start-Process clasico
+        try {
+            Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile', '-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $cmd -ErrorAction Stop
+            $ok = $true
+        } catch {
+            Write-Host "[!] No se pudo abrir PowerShell como administrador: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+    if (-not $ok) {
+        Write-Host '    Hazlo a mano: clic derecho en Inicio > "Terminal (Administrador)" y pega de nuevo el comando.' -ForegroundColor Yellow
     }
     return
 }
