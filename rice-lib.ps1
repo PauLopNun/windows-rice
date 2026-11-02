@@ -494,3 +494,33 @@ function Restore-RiceCursor($state) {
     if ($cur.dir -and (Test-Path -LiteralPath $cur.dir)) { Remove-Item -LiteralPath $cur.dir -Recurse -Force -ErrorAction SilentlyContinue }
     Write-Host '[+] Cursor devuelto al que tenias.' -ForegroundColor Green
 }
+
+# ------------------------------------------------------------------ comprobar la barra superior de Seelen
+# Seelen puede reescribir su barra al arrancar (o puede venir de una instalacion a medias). Tras abrirlo se compara
+# con la del pack por modulos y orden (no por formato) y, si no coincide, se restaura y se reinicia Seelen.
+function Get-RiceToolbarSig([string]$text) {
+    $sec = ''; $sig = @()
+    foreach ($l in ($text -split "`r?`n")) {
+        if ($l -match '^(left|center|right):') { $sec = $Matches[1] }
+        elseif ($l -match "^- '?(@[^'\s]+)'?\s*$") { $sig += "$sec|$($Matches[1])" }
+        elseif ($l -match '^- id:') { $sig += "$sec|(propio)" }
+    }
+    return ($sig -join ';')
+}
+function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
+    $ref = Join-Path $cfgRoot 'seelen-roaming\data\seelen-fancy-toolbar\state.yml'
+    $dst = Join-Path $env:APPDATA 'com.seelen.seelen-ui\data\seelen-fancy-toolbar\state.yml'
+    if (-not (Test-Path $ref)) { return }
+    Start-Sleep -Seconds $waitSeconds   # darle tiempo a Seelen para que escriba lo que vaya a escribir
+    $want = Get-RiceToolbarSig ([IO.File]::ReadAllText($ref))
+    $have = if (Test-Path $dst) { Get-RiceToolbarSig ([IO.File]::ReadAllText($dst)) } else { '' }
+    if ($want -eq $have) { Write-Host '[+] Barra superior de Seelen: correcta.' -ForegroundColor Green; return }
+    Write-Host '[!] La barra superior de Seelen no coincide con la del pack: la restauro y reinicio Seelen.' -ForegroundColor Yellow
+    Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dst) | Out-Null
+    if (Test-Path $dst) { Copy-Item $dst "$dst.bak-windows-rice" -Force }
+    Copy-Item $ref $dst -Force
+    $app = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($app) { Start-RiceUnelevated "shell:AppsFolder\$($app.AppID)" }
+    Write-Host '[+] Barra superior de Seelen restaurada.' -ForegroundColor Green
+}

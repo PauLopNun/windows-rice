@@ -78,6 +78,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern Classic (negro, redondeado). Se descarga al instalar y al desinstalar vuelve el tuyo |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
 | 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
+| 🔎 **Comprobación final** | Al terminar, el instalador comprueba la barra superior de Seelen contra la del pack y, si Seelen la ha cambiado, la restaura solo |
 | ⚡ **Autoarranque** | Seelen, Flow, Everything y PowerToys arrancan con Windows; se abre todo al terminar |
 | 🧼 **Escritorio limpio** | Los accesos directos que dejan los instaladores en el escritorio se borran (solo los nuevos; los tuyos no se tocan) |
 
