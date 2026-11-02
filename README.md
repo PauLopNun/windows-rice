@@ -36,6 +36,7 @@ Pedirá permisos de administrador, descargará el pack a `%USERPROFILE%\windows-
    `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/diagnose.ps1 | iex`
 6. Si la barra superior de Seelen no tiene los módulos del pack (energía, CPU/RAM…) o están en otro orden, repárala (hace copia de la tuya y reinicia Seelen; con `-ResetDock` reconstruye también el dock):
    `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/repair-seelen.ps1 | iex`
+7. **El dock sale sin fondo, o la barra con colores raros o módulos que no se ven:** casi siempre es un **WebView2 antiguo**. El tema de Seelen usa CSS moderno (Chromium 123 o superior) y con un WebView2 viejo el navegador ignora esas reglas. El instalador y `repair-seelen.ps1` lo comprueban y lo actualizan solos. A mano: `winget install --id Microsoft.EdgeWebView2Runtime --exact --source winget` y reinicia Seelen. El diagnóstico muestra la versión que tienes.
 
 Si sigue fallando, copia el mensaje de error **completo** (la línea roja entera) y abre un *issue* en el repo.
 </details>
@@ -78,6 +79,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern Classic (negro, redondeado). Se descarga al instalar y al desinstalar vuelve el tuyo |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
 | 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
+| 🧩 **WebView2** | Si el de Windows es antiguo (Seelen necesita Chromium 123+) se actualiza solo; con uno viejo el dock sale sin fondo |
 | 🔎 **Comprobación final** | Al terminar, el instalador comprueba la barra superior de Seelen contra la del pack y, si Seelen la ha cambiado, la restaura solo |
 | ⚡ **Autoarranque** | Seelen, Flow, Everything y PowerToys arrancan con Windows; se abre todo al terminar |
 | 🧼 **Escritorio limpio** | Los accesos directos que dejan los instaladores en el escritorio se borran (solo los nuevos; los tuyos no se tocan) |

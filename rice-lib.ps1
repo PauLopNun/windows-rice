@@ -524,3 +524,29 @@ function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
     if ($app) { Start-RiceUnelevated "shell:AppsFolder\$($app.AppID)" }
     Write-Host '[+] Barra superior de Seelen restaurada.' -ForegroundColor Green
 }
+
+# ------------------------------------------------------------------ WebView2 (el motor con el que Seelen dibuja barra y dock)
+# El tema de Seelen usa CSS moderno (light-dark() = Chromium 123, oklch(from ...) = Chromium 119). Con un WebView2 antiguo
+# el dock sale SIN fondo y los colores de los modulos de la barra fallan.
+function Get-RiceWebView2Version {
+    foreach ($k in @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+                     'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+                     'HKCU:\Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}')) {
+        $v = (Get-ItemProperty $k -ErrorAction SilentlyContinue).pv
+        if ($v) { try { return [version]$v } catch { } }
+    }
+    return $null
+}
+function Ensure-RiceWebView2([version]$min = '123.0.0.0') {
+    $v = Get-RiceWebView2Version
+    if ($v -and $v -ge $min) { Write-Host "[+] WebView2 $v (suficiente para Seelen)." -ForegroundColor Green; return $true }
+    Write-Host ("[!] WebView2 " + $(if ($v) { "$v es demasiado antiguo" } else { 'no encontrado' }) + " (Seelen necesita $min o superior): lo actualizo...") -ForegroundColor Yellow
+    $wc = Get-Command winget -ErrorAction SilentlyContinue | Select-Object -First 1
+    $wg = if ($wc -and $wc.CommandType -eq 'Alias') { $wc.Definition } elseif ($wc) { $wc.Source } else { Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\winget.exe' }
+    & $wg install --id Microsoft.EdgeWebView2Runtime --exact --silent --source winget --accept-package-agreements --accept-source-agreements | Out-Host
+    $v2 = Get-RiceWebView2Version
+    if ($v2 -and $v2 -ge $min) { Write-Host "[+] WebView2 actualizado a $v2." -ForegroundColor Green; return $true }
+    Write-Host '[!] No pude actualizar WebView2. Sin eso el dock sale sin fondo y la barra con colores raros.' -ForegroundColor Yellow
+    Write-Host '    Descarga el "Evergreen Standalone Installer" de https://developer.microsoft.com/microsoft-edge/webview2 , instalalo y reinicia Seelen.' -ForegroundColor Yellow
+    return $false
+}

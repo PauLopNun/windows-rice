@@ -69,7 +69,10 @@ public static class DiagWin {
 } catch { Line ("No pude listar las ventanas: " + $_.Exception.Message) }
 $wv2 = @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKCU:\Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}') |
     ForEach-Object { (Get-ItemProperty $_).pv } | Where-Object { $_ } | Select-Object -First 1
-Line ("WebView2 Runtime: " + $(if ($wv2) { $wv2 } else { 'NO ENCONTRADO (Seelen lo necesita para dibujar la barra)' }))
+$wvTxt = if (-not $wv2) { 'NO ENCONTRADO (Seelen lo necesita para dibujar la barra)' } elseif ([version]$wv2 -lt [version]'123.0.0.0') { "$wv2   <-- DEMASIADO ANTIGUO: el dock sale sin fondo y la barra con colores mal (hace falta 123 o superior)" } else { "$wv2 (correcto)" }
+Line ("WebView2 Runtime: " + $wvTxt)
+$osw = Get-CimInstance Win32_OperatingSystem
+Line ("WMI/CIM: " + $(if ($osw -and $osw.Caption) { 'responde' } else { 'NO RESPONDE (repositorio WMI danado; Seelen registra errores de WMI)' }))
 $wvp = @(Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Where-Object { $_.CommandLine -match 'seelen' })
 Line ("Procesos WebView2 de Seelen: " + $wvp.Count + "   (en un PC con 2 monitores sanos salen ~12)")
 $gpu = (Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name + " drv " + $_.DriverVersion }) -join ' | '

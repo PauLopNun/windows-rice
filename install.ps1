@@ -363,6 +363,9 @@ if (-not $NoCursor) { Install-RiceCursor (Join-Path $PSScriptRoot 'cursor.json')
 if (-not $NoTweaks) { Apply-RiceTweaks $state { Save-State } }
 Set-RiceAutostart $state { Save-State } -NoSeelen:$NoSeelen
 
+# ---------------------------------------------------------------- WebView2 (Seelen lo necesita moderno)
+if (-not $NoSeelen) { [void](Ensure-RiceWebView2) }
+
 # ---------------------------------------------------------------- abrir todo
 if (-not $NoLaunch) {
     Info 'Abriendo Seelen UI, Flow Launcher, PowerToys y Everything...'

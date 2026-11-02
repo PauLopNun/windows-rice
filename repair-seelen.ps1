@@ -31,6 +31,16 @@ if (-not $ref) {
 }
 if ($ref -notmatch '(?m)^right:' -or $ref -notmatch '@default/power') { throw 'El archivo de referencia no tiene el formato esperado; no toco nada.' }
 
+# 1b) WebView2: el tema de Seelen usa CSS moderno (Chromium 123+). Con uno antiguo el dock sale SIN fondo y la barra con colores mal.
+$wvKeys = @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKCU:\Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}')
+$wvVer = $null; foreach ($k in $wvKeys) { $pv = (Get-ItemProperty $k -ErrorAction SilentlyContinue).pv; if ($pv) { $wvVer = [version]$pv; break } }
+if (-not $wvVer -or $wvVer -lt [version]'123.0.0.0') {
+    Write-Host ("[!] WebView2 " + $(if ($wvVer) { "$wvVer es demasiado antiguo" } else { 'no encontrado' }) + " (hace falta 123 o superior): lo actualizo (puede pedir permisos de administrador)...") -ForegroundColor Yellow
+    $wg = Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\winget.exe'
+    if (Test-Path $wg) { & $wg install --id Microsoft.EdgeWebView2Runtime --exact --silent --source winget --accept-package-agreements --accept-source-agreements | Out-Host }
+    else { Write-Host '[!] No encuentro winget. Instala el WebView2 desde https://developer.microsoft.com/microsoft-edge/webview2' -ForegroundColor Yellow }
+} else { Write-Host "[+] WebView2 $wvVer correcto." -ForegroundColor Green }
+
 # 2) parar Seelen, copia de seguridad y restaurar
 $app = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
 # solo la parte visual: slu-service va con permisos elevados y no se puede cerrar sin administrador (Seelen lo gestiona solo)
