@@ -1,0 +1,10 @@
+id: "@paulopnun/rice-wave"
+metadata:
+  displayName: Rice Wave
+  description: >-
+    Efecto ola (zoom tipo macOS) para el dock de Seelen UI, solo con CSS.
+    Se suma encima del tema por defecto: no cambia colores ni la barra superior.
+  tags:
+    - weg
+styles:
+  "@seelen/weg": !include styles/weg.css
