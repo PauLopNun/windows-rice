@@ -36,7 +36,7 @@ Pedirá permisos de administrador, descargará el pack a `%USERPROFILE%\windows-
    `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/diagnose.ps1 | iex`
 6. Si la barra superior de Seelen no tiene los módulos del pack (energía, CPU/RAM…) o están en otro orden, repárala (hace copia de la tuya y reinicia Seelen; con `-ResetDock` reconstruye también el dock):
    `irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/repair-seelen.ps1 | iex`
-7. **El dock sale sin fondo, o la barra con colores raros o módulos que no se ven:** casi siempre es un **WebView2 antiguo**. El tema de Seelen usa CSS moderno (Chromium 123 o superior) y con un WebView2 viejo el navegador ignora esas reglas. El instalador y `repair-seelen.ps1` lo comprueban y lo actualizan solos. A mano: `winget install --id Microsoft.EdgeWebView2Runtime --exact --source winget` y reinicia Seelen. El diagnóstico muestra la versión que tienes.
+7. **El dock sale sin fondo, o la barra con colores raros o módulos que no se ven:** la causa más probable es un **WebView2 antiguo** (ver «Problemas conocidos» más abajo). El tema de Seelen usa CSS moderno (Chromium 123 o superior) y con un WebView2 viejo el navegador ignora esas reglas. El instalador y `repair-seelen.ps1` lo comprueban y lo actualizan solos. A mano: `winget install --id Microsoft.EdgeWebView2Runtime --exact --source winget` y reinicia Seelen. El diagnóstico muestra la versión que tienes.
 
 Si sigue fallando, copia el mensaje de error **completo** (la línea roja entera) y abre un *issue* en el repo.
 </details>
@@ -156,6 +156,29 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 - **Volumen por aplicación o por pestaña:** no está incluido. Windows controla el volumen por programa y Chrome mete todas sus pestañas en uno solo, así que ninguna herramienta puede separar un vídeo de YouTube. Probé EarTrumpet y no mostraba la barra interna de Spotify ni el vídeo, así que lo quité. Para YouTube usa su propio reproductor (↑/↓ y `M`).
 - Los números de RAM son de un PC concreto; mide los tuyos con el Administrador de tareas.
 - Créditos y licencias de terceros en [THIRD-PARTY.md](THIRD-PARTY.md).
+
+## ⚠️ Problemas conocidos
+
+**El dock sale sin fondo oscuro, la barra superior tiene módulos que no se ven o aparece un icono raro**
+
+Seelen dibuja la barra y el dock con **WebView2** (el motor web de Edge), y su tema usa CSS moderno: `oklch(from …)` (Chromium 119+) para el fondo del dock y `light-dark(…)` (Chromium 123+) para los colores. Si Windows tiene un WebView2 más antiguo, el navegador **ignora esas reglas** y se ve así.
+
+- Se detectó en un PC con **WebView2 118** (el pack se probó con la 156). La explicación encaja con el código del tema, pero **solo se ha confirmado a medias**: no se ha comprobado aún en ese PC que al actualizar se arregle.
+- El instalador comprueba la versión y, si es menor de 123, la actualiza con `winget` (`Microsoft.EdgeWebView2Runtime`) antes de abrir Seelen. `repair-seelen.ps1` hace lo mismo.
+- A mano: `winget install --id Microsoft.EdgeWebView2Runtime --exact --source winget` y reinicia Seelen (o cierra sesión).
+- Comprueba tu versión con el diagnóstico (`diagnose.ps1`): marca «DEMASIADO ANTIGUO» si hace falta actualizar.
+
+**Falta el módulo de CPU, o `diagnose.ps1` dice «WMI/CIM NO RESPONDE»**
+
+Windows tiene el repositorio de WMI dañado y Seelen registra un error de WMI al arrancar. En PowerShell **como administrador**: `winmgmt /verifyrepository`; si dice que es inconsistente, `winmgmt /salvagerepository`. No se ha confirmado que esto sea lo que causa la falta del módulo de CPU.
+
+**La barra o el dock solo se ven en un monitor**
+
+Seelen oculta la barra y el dock de un monitor que tenga una aplicación a **pantalla completa** (Discord, un vídeo, un juego). Sal de pantalla completa y reaparecen.
+
+**Error de certificado `0x8a15005e` o «msstore» al instalar**
+
+Suele ser la fecha y hora de Windows, una VPN, el antivirus o una red de empresa. El instalador ya usa solo el origen `winget` para evitarlo; si aun así falla, prueba otra red y vuelve a lanzar el comando (salta lo ya hecho).
 
 ## Licencia
 
