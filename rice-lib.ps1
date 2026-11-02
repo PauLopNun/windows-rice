@@ -342,8 +342,17 @@ function Set-RiceAutostart($state, [scriptblock]$save, [switch]$NoSeelen) {
         @{ Name = 'windows-rice-flow';       Exe = (Find-RiceExe 'flow');       Args = '' }
         @{ Name = 'windows-rice-everything'; Exe = (Find-RiceExe 'everything'); Args = ' -startup' }
     )
-    # Seelen (MSIX) no trae tarea de inicio propia: se arranca igual que desde el menu Inicio (shell:AppsFolder)
-    if (-not $NoSeelen) {
+    # Seelen (MSIX): las versiones recientes traen su propia tarea de inicio (\Seelen\Seelen UI Service).
+    # Si existe, NO se añade otra entrada: arrancarlo dos veces (y una de ellas con "explorer.exe shell:AppsFolder"
+    # en pleno inicio de sesion, cuando el shell aun no esta listo) da errores de "clase no registrada".
+    # Solo si no hay tarea propia se usa la entrada Run como alternativa.
+    $seelenTask = Get-ScheduledTask -TaskPath '\Seelen\' -ErrorAction SilentlyContinue |
+        Where-Object { $_.State -ne 'Disabled' -and ($_.Triggers | Where-Object { $_.CimClass.CimClassName -eq 'MSFT_TaskLogonTrigger' }) }
+    if ($seelenTask) {
+        # limpia la entrada duplicada que dejaran versiones anteriores del script
+        Remove-ItemProperty $script:RunKey -Name 'windows-rice-seelen' -ErrorAction SilentlyContinue
+        $state.runEntries = @(@($state.runEntries) | Where-Object { $_ -and $_ -ne 'windows-rice-seelen' })
+    } elseif (-not $NoSeelen) {
         $sa = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($sa) { $want += @{ Name = 'windows-rice-seelen'; Exe = 'explorer.exe'; Args = " shell:AppsFolder\$($sa.AppID)" } }
     }
