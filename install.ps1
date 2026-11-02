@@ -372,7 +372,7 @@ if (-not $NoSeelen) { [void](Ensure-RiceWebView2) }
 if (-not $NoLaunch) {
     Info 'Abriendo Seelen UI, Flow Launcher, PowerToys y Everything...'
     Start-RiceApps -NoSeelen:$NoSeelen
-    if ($hasConfig -and -not $NoSeelen) { Ensure-RiceSeelenToolbar $cfgRoot }
+    if ($hasConfig -and -not $NoSeelen) { Ensure-RiceSeelenToolbar $cfgRoot; Ensure-RiceSeelenTheme $cfgRoot }
     if (-not $NoSeelen) { Install-RiceSeelenResources }
 }
 

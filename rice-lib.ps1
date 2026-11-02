@@ -609,6 +609,68 @@ function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
     Write-Host '[+] Barra superior de Seelen restaurada.' -ForegroundColor Green
 }
 
+# Si la config de Seelen ya se aplico en una instalacion anterior (antes de que existiera el tema Rice Wave o los ajustes de
+# ocultar barra/dock), Apply-RiceConfig dice "ya aplicada, no la piso" y esas novedades nunca llegan. Esta funcion las pone
+# aparte, sin pisar el resto de ajustes del usuario: copia el tema si falta o cambio, lo activa en activeThemes y copia
+# solo las claves de byWidget que define el pack. Reinicia Seelen solo si cambio algo.
+function Ensure-RiceSeelenTheme([string]$cfgRoot) {
+    $refTheme = Join-Path $cfgRoot 'seelen-roaming\themes\rice-wave'
+    $refSet   = Join-Path $cfgRoot 'seelen-roaming\settings.json'
+    if (-not (Test-Path $refTheme) -or -not (Test-Path $refSet)) { return }
+    $root     = Join-Path $env:APPDATA 'com.seelen.seelen-ui'
+    $dstTheme = Join-Path $root 'themes\rice-wave'
+    $settings = Join-Path $root 'settings.json'
+    if (-not (Test-Path $settings)) { return }   # Seelen aun no creo su config: la del pack se aplica en la primera pasada
+    $changed = $false
+    try {
+        $same = $false
+        if (Test-Path $dstTheme) {
+            $a = Get-ChildItem $refTheme -Recurse -File | ForEach-Object { '{0}|{1}' -f $_.FullName.Substring($refTheme.Length), (Get-FileHash $_.FullName -Algorithm SHA256).Hash }
+            $b = Get-ChildItem $dstTheme -Recurse -File | ForEach-Object { '{0}|{1}' -f $_.FullName.Substring($dstTheme.Length), (Get-FileHash $_.FullName -Algorithm SHA256).Hash }
+            $same = (@($a | Sort-Object) -join ';') -eq (@($b | Sort-Object) -join ';')
+        }
+        if (-not $same) {
+            New-Item -ItemType Directory -Force -Path $dstTheme | Out-Null
+            Copy-Item (Join-Path $refTheme '*') -Destination $dstTheme -Recurse -Force
+            $changed = $true
+        }
+        $s   = [IO.File]::ReadAllText($settings) | ConvertFrom-Json
+        $ref = [IO.File]::ReadAllText($refSet)   | ConvertFrom-Json
+        $dirty = $false
+        # temas del pack activos (el orden importa poco, pero se anaden al final)
+        $themes = @(); if ($s.PSObject.Properties.Name -contains 'activeThemes') { $themes = @($s.activeThemes) }
+        if (-not $themes.Count) { $themes = @('@default/theme') }
+        foreach ($t in @($ref.activeThemes)) { if ($t -and $themes -notcontains $t) { $themes += $t; $dirty = $true } }
+        if ($dirty) { if ($s.PSObject.Properties.Name -contains 'activeThemes') { $s.activeThemes = $themes } else { $s | Add-Member -NotePropertyName activeThemes -NotePropertyValue $themes } }
+        # ajustes por widget que define el pack (ocultar solo, esperas...)
+        if ($ref.PSObject.Properties.Name -contains 'byWidget') {
+            if (-not ($s.PSObject.Properties.Name -contains 'byWidget')) { $s | Add-Member -NotePropertyName byWidget -NotePropertyValue ([pscustomobject]@{}) }
+            foreach ($w in $ref.byWidget.PSObject.Properties) {
+                if (-not ($s.byWidget.PSObject.Properties.Name -contains $w.Name)) { $s.byWidget | Add-Member -NotePropertyName $w.Name -NotePropertyValue ([pscustomobject]@{}); $dirty = $true }
+                foreach ($k in $w.Value.PSObject.Properties) {
+                    $cur = $s.byWidget.($w.Name)
+                    if ($cur.PSObject.Properties.Name -contains $k.Name) {
+                        if (($cur.($k.Name) | ConvertTo-Json -Compress) -ne ($k.Value | ConvertTo-Json -Compress)) { $cur.($k.Name) = $k.Value; $dirty = $true }
+                    } else { $cur | Add-Member -NotePropertyName $k.Name -NotePropertyValue $k.Value; $dirty = $true }
+                }
+            }
+        }
+        if ($dirty) {
+            $bak = "$settings.bak-windows-rice"
+            if (-not (Test-Path $bak)) { Copy-Item $settings $bak -Force }
+            Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2   # si Seelen sigue abierto, reescribe settings.json al cerrarse
+            [IO.File]::WriteAllText($settings, ($s | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
+            $changed = $true
+        }
+    } catch { Write-Host "[!] No pude activar el tema Rice Wave ($($_.Exception.Message)). Activalo desde los ajustes de Seelen." -ForegroundColor Yellow; return }
+    if ($changed) {
+        Write-Host '[+] Tema Rice Wave (animacion del dock) y ajustes de Seelen puestos. Reinicio Seelen.' -ForegroundColor Green
+        Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2
+        $app = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($app) { Start-RiceUnelevated "shell:AppsFolder\$($app.AppID)" }
+    } else { Write-Host '[+] Tema Rice Wave: ya estaba puesto.' -ForegroundColor Green }
+}
+
 # ------------------------------------------------------------------ recursos de la comunidad de Seelen (seelen.io/resources)
 # Se piden con el mismo enlace que usa el boton "Descargar" de la web: seelen-ui.uri://resource/<entorno>/<uuid>.
 # OJO: el uuid NO es el codigo corto de la URL de la web (1jBowF...), sino ese mismo codigo decodificado de base64url a 16 bytes.
