@@ -47,10 +47,43 @@ if (Test-Path $tb) {
     }
 } else { Line 'NO EXISTE state.yml de la barra' }
 
-Sec 'Errores recientes del registro de Seelen'
+Sec 'Ventanas y motor grafico de Seelen'
+try {
+    Add-Type -TypeDefinition @"
+using System; using System.Text; using System.Collections.Generic; using System.Runtime.InteropServices;
+public static class DiagWin {
+  public delegate bool EnumProc(IntPtr h, IntPtr l);
+  [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc p, IntPtr l);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] static extern int GetClassName(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L,T,R,B; }
+  public static string[] Tauri() { var res = new List<string>();
+    EnumWindows((h,l) => { var c = new StringBuilder(64); GetClassName(h, c, 64); if (c.ToString() != "Tauri Window") return true;
+      var t = new StringBuilder(128); GetWindowText(h, t, 128); RECT r; GetWindowRect(h, out r);
+      res.Add("visible=" + IsWindowVisible(h) + "  " + (r.R - r.L) + "x" + (r.B - r.T) + "  " + t); return true; }, IntPtr.Zero); return res.ToArray(); } }
+"@
+    $w = [DiagWin]::Tauri()
+    Line ("Ventanas de Seelen: " + @($w).Count); $w | Sort-Object | ForEach-Object { Line ("   " + $_) }
+} catch { Line ("No pude listar las ventanas: " + $_.Exception.Message) }
+$wv2 = @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKCU:\Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}') |
+    ForEach-Object { (Get-ItemProperty $_).pv } | Where-Object { $_ } | Select-Object -First 1
+Line ("WebView2 Runtime: " + $(if ($wv2) { $wv2 } else { 'NO ENCONTRADO (Seelen lo necesita para dibujar la barra)' }))
+$wvp = @(Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Where-Object { $_.CommandLine -match 'seelen' })
+Line ("Procesos WebView2 de Seelen: " + $wvp.Count + "   (en un PC con 2 monitores sanos salen ~12)")
+$gpu = (Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name + " drv " + $_.DriverVersion }) -join ' | '
+Line ("Grafica: " + $gpu)
+
+Sec 'Errores recientes del registro de Seelen (sin ruido de iconos)'
 if (Test-Path $log) {
-    Get-Content $log -Tail 4000 | Where-Object { $_ -match '\[(ERROR|WARN)\]' -and $_ -notmatch 'Tray icon .* added without registry|telemetry' } |
-        Select-Object -Last 25 | ForEach-Object { Line ($_.Substring(0, [Math]::Min(230, $_.Length))) }
+    $allLog = Get-Content $log -Tail 6000
+    Line ("(se ignoran " + @($allLog | Where-Object { $_ -match 'icon_extractor' }).Count + " errores de iconos y los avisos de bandeja/brillo, que son normales)")
+    $allLog | Where-Object { $_ -match '\[(ERROR|WARN)\]' -and $_ -notmatch 'icon_extractor|Tray icon .* added without registry|telemetry|brightness' } |
+        Select-Object -Last 30 | ForEach-Object { Line ($_.Substring(0, [Math]::Min(230, $_.Length))) }
+    Line ''; Line 'Carga de recursos:'
+    $allLog | Where-Object { $_ -match 'seelen_ui::resources\]|\[measure\] RESOURCES|Registering widget' } | Select-Object -Last 6 | ForEach-Object { Line ('   ' + $_.Substring(0, [Math]::Min(150, $_.Length))) }
+    Line ("Widgets registrados en esta sesion: " + @($allLog | Where-Object { $_ -match 'Registering widget' }).Count)
     $mons = Get-Content $log -Tail 4000 | Where-Object { $_ -match 'weg\?monitorId=.*Ready|fancy-toolbar\?monitorId=.*Ready' } | Select-Object -Last 4
     Line ''; Line 'Barra/dock listos por monitor:'; $mons | ForEach-Object { Line ('   ' + $_.Substring(0, [Math]::Min(150, $_.Length))) }
 } else { Line 'No hay registro de Seelen (nunca se ha abierto?)' }
