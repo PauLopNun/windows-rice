@@ -182,7 +182,7 @@ Seelen oculta la barra y el dock de un monitor que tenga una aplicación a **pan
 
 **En un juego en ventana sin bordes se ve la barra o el dock**
 
-El pack deja la barra superior y el dock en «ocultar solo si una ventana los tapa» (`hideMode: OnOverlap`) y con 700 ms de retraso para reaparecer al tocar el borde. Si el juego sigue dejando ver la barra, comprueba que su resolución es la de tu pantalla: algunos juegos arrancan en una más pequeña y la ventana no tapa la barra. Para cambiar el retraso, edita `delayToShow` en `%APPDATA%com.seelen.seelen-uisettings.json`.
+El pack deja la barra superior y el dock en «ocultar solo si una ventana los tapa» (`hideMode: OnOverlap`). Si el juego sigue dejando ver la barra, comprueba que su resolución es la de tu pantalla: algunos juegos arrancan en una más pequeña y la ventana no tapa la barra.
 
 **Error de certificado `0x8a15005e` o «msstore» al instalar**
 
