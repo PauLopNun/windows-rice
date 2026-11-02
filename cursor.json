@@ -1,9 +1,21 @@
 {
-  "name": "Bibata-Modern-Classic",
-  "version": "2.0.7",
-  "url": "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Classic-Windows.zip",
-  "sha256": "b98eca4077d6e7796ff7e710e4d220ca13439f1118160d1e7b3db9e91fdec2be",
-  "subdir": "Bibata-Modern-Classic-Regular-Windows",
+  "note": "Bibata (GPL-3.0), se descarga al instalar. dark = el que se pone en modo oscuro, light = el que se pone en modo claro. Para cambiarlos, cambia name, url, sha256 y subdir.",
   "license": "GPL-3.0",
-  "website": "https://github.com/ful1e5/Bibata_Cursor"
+  "website": "https://github.com/ful1e5/Bibata_Cursor",
+  "variants": {
+    "dark": {
+      "name": "Bibata-Modern-Classic",
+      "version": "2.0.7",
+      "url": "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Classic-Windows.zip",
+      "sha256": "b98eca4077d6e7796ff7e710e4d220ca13439f1118160d1e7b3db9e91fdec2be",
+      "subdir": "Bibata-Modern-Classic-Regular-Windows"
+    },
+    "light": {
+      "name": "Bibata-Modern-Ice",
+      "version": "2.0.7",
+      "url": "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice-Windows.zip",
+      "sha256": "0045e40324da5b540b3bee260f53d0792df62be9cdef91655a024ae9f151bd04",
+      "subdir": "Bibata-Modern-Ice-Regular-Windows"
+    }
+  }
 }

@@ -434,9 +434,9 @@ function Uninstall-RiceUnelevated([string]$id) {
     return $code
 }
 
-# ------------------------------------------------------------------ cursor (Bibata)
-# Se descarga del release oficial (version fija + SHA256), se instala solo para el usuario (sin admin) y se guardan
-# los valores anteriores del registro para devolverlos al desinstalar. Bibata es GPL-3.0: no se redistribuye en este repo.
+# ------------------------------------------------------------------ cursor (Bibata): uno para modo oscuro y otro para claro
+# Se descargan del release oficial (version fija + SHA256), se instalan solo para el usuario (sin admin) y se guardan los
+# valores anteriores del registro para devolverlos al desinstalar. Bibata es GPL-3.0: no se redistribuye en este repo.
 $script:CursorMap = [ordered]@{
     Arrow = 'Pointer.cur'; Help = 'Help.cur'; AppStarting = 'Work.ani'; Wait = 'Busy.ani'; crosshair = 'Cross.cur'
     precisionhair = 'Cross.cur'; IBeam = 'Text.cur'; NWPen = 'Handwriting.cur'; No = 'Unavailable.cur'; SizeNS = 'Vert.cur'
@@ -452,39 +452,73 @@ public static extern int SystemParametersInfo(int a, int b, string c, int d);
 '@
     }
     [void][RiceNative]::SystemParametersInfo(0x57, 0, $null, 3)   # SPI_SETCURSORS: recargar los cursores ya
+    # refresco estandar de Windows: aplica los cambios de HKCU al instante (tambien cuando se llama desde un proceso elevado)
+    try { Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\rundll32.exe') -ArgumentList 'user32.dll,UpdatePerUserSystemParameters 1, True' -WindowStyle Hidden -Wait } catch { }
 }
-function Install-RiceCursor([string]$jsonFile, $state, [scriptblock]$save) {
-    if (-not (Test-Path $jsonFile)) { return }
-    if ($state.cursor) { Write-Host '[+] Cursor: ya instalado por este script.' -ForegroundColor Green; return }
+function Get-RiceCursorRoot { Join-Path $env:LOCALAPPDATA 'windows-rice\cursors' }
+function Get-RiceWindowsMode {
+    $p = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -ErrorAction SilentlyContinue
+    if ($p -and $p.AppsUseLightTheme -eq 1) { 'light' } else { 'dark' }
+}
+# Pone en el registro el cursor de un modo (dark|light). Devuelve $false si ese cursor no esta instalado.
+function Set-RiceCursorMode([string]$jsonFile, [string]$mode) {
     $c = Get-Content $jsonFile -Raw | ConvertFrom-Json
+    $v = $c.variants.$mode
+    if (-not $v) { return $false }
+    $dir = Join-Path (Get-RiceCursorRoot) $v.name
+    if (-not (Test-Path (Join-Path $dir 'Pointer.cur'))) { return $false }
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Control Panel\Cursors', $true)
+    $key.SetValue('', $v.name, 'String')
+    foreach ($kv in $script:CursorMap.GetEnumerator()) { $key.SetValue($kv.Key, (Join-Path $dir $kv.Value), 'ExpandString') }
+    $key.SetValue('Scheme Source', 1, 'DWord')
+    $key.Close()
+    Send-RiceCursorChange
+    return $true
+}
+function Install-RiceCursorVariant($v, [string]$root) {
+    $ProgressPreference = 'SilentlyContinue'
     $tmp = Join-Path $env:TEMP ('rice-cur-' + [guid]::NewGuid().ToString('N'))
     try {
         New-Item -ItemType Directory -Path $tmp | Out-Null
         $zip = Join-Path $tmp 'c.zip'
-        Invoke-WebRequest $c.url -OutFile $zip -UseBasicParsing
-        if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $c.sha256) { throw 'el hash no coincide, no lo instalo' }
+        Invoke-WebRequest $v.url -OutFile $zip -UseBasicParsing
+        if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $v.sha256) { throw "el hash de $($v.name) no coincide, no lo instalo" }
         Expand-Archive $zip -DestinationPath (Join-Path $tmp 'x') -Force
-        $src = Join-Path (Join-Path $tmp 'x') $c.subdir
-        if (-not (Test-Path (Join-Path $src 'Pointer.cur'))) { throw 'el paquete no tiene el formato esperado' }
-        $dir = Join-Path $env:LOCALAPPDATA ('windows-rice\cursors\' + $c.name)
+        $src = Join-Path (Join-Path $tmp 'x') $v.subdir
+        if (-not (Test-Path (Join-Path $src 'Pointer.cur'))) { throw "el paquete $($v.name) no tiene el formato esperado" }
+        $dir = Join-Path $root $v.name
         New-Item -ItemType Directory -Force -Path $dir | Out-Null
         Copy-Item (Join-Path $src '*.cur'), (Join-Path $src '*.ani') -Destination $dir -Force
-        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Control Panel\Cursors', $true)
-        $names = @('') + @($script:CursorMap.Keys) + @('Scheme Source')
-        $prev = @()
-        foreach ($n in $names) {
-            $v = $key.GetValue($n, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
-            $prev += [pscustomobject]@{ name = $n; value = $v; kind = $(if ($null -ne $v) { "$($key.GetValueKind($n))" } else { $null }) }
+    } finally { Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue }
+}
+function Install-RiceCursor([string]$jsonFile, $state, [scriptblock]$save) {
+    if (-not (Test-Path $jsonFile)) { return }
+    $c = Get-Content $jsonFile -Raw | ConvertFrom-Json
+    $root = Get-RiceCursorRoot
+    try {
+        # lo que habia antes, UNA sola vez, para devolverlo al desinstalar
+        if (-not $state.cursor) {
+            $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Control Panel\Cursors', $true)
+            $prev = @()
+            foreach ($n in (@('') + @($script:CursorMap.Keys) + @('Scheme Source'))) {
+                $v = $key.GetValue($n, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+                $prev += [pscustomobject]@{ name = $n; value = $v; kind = $(if ($null -ne $v) { "$($key.GetValueKind($n))" } else { $null }) }
+            }
+            $key.Close()
+            $state.cursor = [pscustomobject]@{ dir = $root; prev = $prev }; & $save
         }
-        $state.cursor = [pscustomobject]@{ dir = $dir; prev = $prev }; & $save
-        $key.SetValue('', $c.name, 'String')
-        foreach ($kv in $script:CursorMap.GetEnumerator()) { $key.SetValue($kv.Key, (Join-Path $dir $kv.Value), 'ExpandString') }
-        $key.SetValue('Scheme Source', 1, 'DWord')
-        $key.Close()
-        Send-RiceCursorChange
-        Write-Host "[+] Cursor $($c.name) $($c.version) aplicado." -ForegroundColor Green
+        # descargar las variantes que falten (la de oscuro y la de claro)
+        foreach ($m in 'dark', 'light') {
+            $v = $c.variants.$m
+            if ($v -and -not (Test-Path (Join-Path (Join-Path $root $v.name) 'Pointer.cur'))) {
+                Install-RiceCursorVariant $v $root
+                Write-Host "[+] Cursor $($v.name) descargado (modo $m)." -ForegroundColor Green
+            }
+        }
+        $mode = Get-RiceWindowsMode
+        if (Set-RiceCursorMode $jsonFile $mode) { Write-Host "[+] Cursor aplicado para el modo $(if ($mode -eq 'light') { 'claro' } else { 'oscuro' })." -ForegroundColor Green }
+        else { Write-Host '[!] Cursor: no se pudo aplicar.' -ForegroundColor Yellow }
     } catch { Write-Host "[!] Cursor: $($_.Exception.Message)" -ForegroundColor Yellow }
-    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
 function Restore-RiceCursor($state) {
     $cur = $state.cursor
@@ -499,7 +533,7 @@ function Restore-RiceCursor($state) {
     }
     $key.Close()
     Send-RiceCursorChange
-    if ($cur.dir -and (Test-Path -LiteralPath $cur.dir)) { Remove-Item -LiteralPath $cur.dir -Recurse -Force -ErrorAction SilentlyContinue }
+    foreach ($d in @($cur.dir, (Get-RiceCursorRoot))) { if ($d -and (Test-Path -LiteralPath $d)) { Remove-Item -LiteralPath $d -Recurse -Force -ErrorAction SilentlyContinue } }
     Write-Host '[+] Cursor devuelto al que tenias.' -ForegroundColor Green
 }
 

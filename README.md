@@ -76,7 +76,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🔎 **Everything** | Búsqueda instantánea de archivos; Flow la usa por debajo (por eso arranca con Windows) |
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
-| 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern Classic (negro, redondeado). Se descarga al instalar y al desinstalar vuelve el tuyo |
+| 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern: *Classic* (negro) en modo oscuro e *Ice* (blanco) en modo claro; `theme.ps1` cambia el cursor junto con el modo. Se descarga al instalar y al desinstalar vuelve el tuyo |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
 | 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
 | 🧩 **WebView2** | Si el de Windows es antiguo (Seelen necesita Chromium 123+) se actualiza solo; con uno viejo el dock sale sin fondo |
@@ -122,7 +122,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\theme.ps
 powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\theme.ps1" -Mode light  # claro
 ```
 
-No necesita administrador. Cambia Windows y reinicia Seelen para que lo coja al momento. Flow y la Terminal mantienen su tema Catppuccin.
+No necesita administrador. Cambia Windows, **el cursor** (negro en oscuro, blanco en claro) y reinicia Seelen para que lo coja al momento. Flow y la Terminal mantienen su tema Catppuccin.
 
 ## 🧹 Quitarlo todo
 

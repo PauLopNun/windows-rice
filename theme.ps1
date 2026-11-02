@@ -30,6 +30,14 @@ Set-ItemProperty -Path $key -Name SystemUsesLightTheme -Value $val -Type DWord
 Broadcast-RiceSettings
 Write-Host ("[+] Windows en modo " + $(if ($wantLight) { 'CLARO' } else { 'OSCURO' }) + '.') -ForegroundColor Green
 
+# cursor: uno para cada modo (solo si el pack lo instalo; descarga la variante que falte)
+$cursorJson = Join-Path $PSScriptRoot 'cursor.json'
+$stateFile  = Join-Path $env:LOCALAPPDATA 'windows-rice\state.json'
+if ((Test-Path $cursorJson) -and (Test-Path $stateFile)) {
+    $st = Get-Content $stateFile -Raw | ConvertFrom-Json
+    if ($st.cursor) { Install-RiceCursor $cursorJson ([ordered]@{ cursor = $st.cursor }) { } }
+}
+
 if (-not $NoSeelenRestart -and (Get-Process -Name 'seelen-ui' -ErrorAction SilentlyContinue)) {
     $seelen = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($seelen) {
