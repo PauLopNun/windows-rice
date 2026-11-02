@@ -1,1 +1,1 @@
-{"byWidget":{"@seelen/wallpaper-manager":{"enabled":false},"@seelen/fancy-toolbar":{"hideMode":"OnOverlap"},"@seelen/weg":{"hideMode":"OnOverlap"}}}
+{"byWidget":{"@seelen/wallpaper-manager":{"enabled":false},"@seelen/fancy-toolbar":{"hideMode":"Always"},"@seelen/weg":{"hideMode":"OnOverlap"}},"selectedThemes":["@default/theme","@paulopnun/rice-wave"]}

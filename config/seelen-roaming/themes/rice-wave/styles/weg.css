@@ -1,0 +1,45 @@
+/* Rice Wave: dock con efecto ola (magnificacion tipo macOS) solo con CSS.
+   El icono bajo el cursor crece, los vecinos crecen menos y el resto se aparta.
+   Se aplica con `scale` y `translate` (no con `transform`) para no romper el arrastre
+   de iconos de Seelen, que usa `transform`. */
+
+:root {
+  --wave-peak: 1.6;     /* icono bajo el cursor */
+  --wave-near: 1.32;    /* vecinos directos */
+  --wave-far: 1.12;     /* vecinos a dos de distancia */
+  --wave-push: 9px;     /* cuanto se apartan los iconos para dejar sitio */
+}
+
+.taskbar.horizontal .weg-item {
+  transform-origin: 50% 100%;
+  scale: var(--wave-k, 1);
+  translate: var(--wave-x, 0) 0;
+  transition:
+    scale 170ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    translate 170ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    background-color 150ms ease,
+    width 200ms ease,
+    height 200ms ease,
+    padding 200ms ease,
+    border-radius 200ms ease;
+}
+
+/* Todos los de la izquierda se apartan a la izquierda, los de la derecha a la derecha */
+.taskbar.horizontal .weg-item-drag-container:has(~ .weg-item-drag-container:hover) { --wave-x: calc(var(--wave-push) * -1); }
+.taskbar.horizontal .weg-item-drag-container:hover ~ .weg-item-drag-container { --wave-x: var(--wave-push); }
+
+/* Vecinos a dos de distancia */
+.taskbar.horizontal .weg-item-drag-container:has(+ .weg-item-drag-container + .weg-item-drag-container:hover),
+.taskbar.horizontal .weg-item-drag-container:hover + .weg-item-drag-container + .weg-item-drag-container { --wave-k: var(--wave-far); }
+
+/* Vecinos directos */
+.taskbar.horizontal .weg-item-drag-container:has(+ .weg-item-drag-container:hover),
+.taskbar.horizontal .weg-item-drag-container:hover + .weg-item-drag-container { --wave-k: var(--wave-near); }
+
+/* El del cursor */
+.taskbar.horizontal .weg-item-drag-container:hover { --wave-k: var(--wave-peak); --wave-x: 0; }
+
+/* Que el icono ampliado no quede recortado por su contenedor */
+.taskbar.horizontal,
+.taskbar.horizontal > .weg-items-container,
+.taskbar.horizontal .weg-item-drag-container { overflow: visible; }
