@@ -1,7 +1,8 @@
 /* Rice Wave: dock con efecto ola (magnificacion tipo macOS) solo con CSS.
    El icono bajo el cursor crece, los vecinos crecen menos y el resto se aparta.
    Se aplica con `scale` y `translate` (no con `transform`) para no romper el arrastre
-   de iconos de Seelen, que usa `transform`. */
+   de iconos de Seelen, que usa `transform`.
+   Solo para dock horizontal (abajo/arriba): en vertical no se aplica. */
 
 :root {
   --wave-peak: 1.6;     /* icono bajo el cursor */
@@ -10,7 +11,7 @@
   --wave-push: 9px;     /* cuanto se apartan los iconos para dejar sitio */
 }
 
-.taskbar.horizontal .weg-item {
+.taskbar:not(.vertical) .weg-item {
   transform-origin: 50% 100%;
   scale: var(--wave-k, 1);
   translate: var(--wave-x, 0) 0;
@@ -25,21 +26,30 @@
 }
 
 /* Todos los de la izquierda se apartan a la izquierda, los de la derecha a la derecha */
-.taskbar.horizontal .weg-item-drag-container:has(~ .weg-item-drag-container:hover) { --wave-x: calc(var(--wave-push) * -1); }
-.taskbar.horizontal .weg-item-drag-container:hover ~ .weg-item-drag-container { --wave-x: var(--wave-push); }
+.taskbar:not(.vertical) .weg-item-drag-container:has(~ .weg-item-drag-container:hover:not(:has(.media-session-container))) { --wave-x: calc(var(--wave-push) * -1); }
+.taskbar:not(.vertical) .weg-item-drag-container:hover:not(:has(.media-session-container)) ~ .weg-item-drag-container { --wave-x: var(--wave-push); }
 
 /* Vecinos a dos de distancia */
-.taskbar.horizontal .weg-item-drag-container:has(+ .weg-item-drag-container + .weg-item-drag-container:hover),
-.taskbar.horizontal .weg-item-drag-container:hover + .weg-item-drag-container + .weg-item-drag-container { --wave-k: var(--wave-far); }
+.taskbar:not(.vertical) .weg-item-drag-container:has(+ .weg-item-drag-container + .weg-item-drag-container:hover:not(:has(.media-session-container))),
+.taskbar:not(.vertical) .weg-item-drag-container:hover:not(:has(.media-session-container)) + .weg-item-drag-container + .weg-item-drag-container { --wave-k: var(--wave-far); }
 
 /* Vecinos directos */
-.taskbar.horizontal .weg-item-drag-container:has(+ .weg-item-drag-container:hover),
-.taskbar.horizontal .weg-item-drag-container:hover + .weg-item-drag-container { --wave-k: var(--wave-near); }
+.taskbar:not(.vertical) .weg-item-drag-container:has(+ .weg-item-drag-container:hover:not(:has(.media-session-container))),
+.taskbar:not(.vertical) .weg-item-drag-container:hover:not(:has(.media-session-container)) + .weg-item-drag-container { --wave-k: var(--wave-near); }
 
 /* El del cursor */
-.taskbar.horizontal .weg-item-drag-container:hover { --wave-k: var(--wave-peak); --wave-x: 0; }
+.taskbar:not(.vertical) .weg-item-drag-container:hover:not(:has(.media-session-container)) { --wave-k: var(--wave-peak); --wave-x: 0; }
 
-/* Que el icono ampliado no quede recortado por su contenedor */
-.taskbar.horizontal,
-.taskbar.horizontal > .weg-items-container,
-.taskbar.horizontal .weg-item-drag-container { overflow: visible; }
+/* El reproductor multimedia del dock es ancho: ampliado sale enorme, asi que no se amplia
+   (si se aparta como el resto para dejar sitio) */
+.taskbar:not(.vertical) .weg-item.media-session-container {
+  scale: 1 !important;
+}
+
+/* Que el icono ampliado no quede recortado por las cajas del dock.
+   Seelen pone aqui overflow para el scroll con muchos iconos; con la ola hace falta visible. */
+.taskbar:not(.vertical),
+.taskbar:not(.vertical) > .weg-items-container,
+.taskbar:not(.vertical) .weg-item-drag-container {
+  overflow: visible !important;
+}

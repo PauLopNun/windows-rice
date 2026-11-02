@@ -373,6 +373,7 @@ if (-not $NoLaunch) {
     Info 'Abriendo Seelen UI, Flow Launcher, PowerToys y Everything...'
     Start-RiceApps -NoSeelen:$NoSeelen
     if ($hasConfig -and -not $NoSeelen) { Ensure-RiceSeelenToolbar $cfgRoot }
+    if (-not $NoSeelen) { Install-RiceSeelenResources }
 }
 
 Remove-RiceNewDesktopLinks $desktopBefore   # por si alguna app lo crea al abrirse por primera vez

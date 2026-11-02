@@ -41,6 +41,9 @@ $script:Tweaks = @(
     @{ Path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced';  Name = 'TaskbarDa';            Value = 0 }  # boton widgets
     @{ Path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced';  Name = 'TaskbarMn';            Value = 0 }  # chat
     @{ Path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced';  Name = 'ShowTaskViewButton';   Value = 0 }
+    # barra de tareas de Windows solo en el monitor principal: en los demas queda el dock de Seelen (si no, salen las dos apiladas).
+    # Windows 11 lo aplica al reiniciar el Explorador o al volver a iniciar sesion.
+    @{ Path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced';  Name = 'MMTaskbarEnabled';     Value = 0 }
 )
 
 function Expand-RicePath([string]$p) {
@@ -595,6 +598,49 @@ function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
     $app = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($app) { Start-RiceUnelevated "shell:AppsFolder\$($app.AppID)" }
     Write-Host '[+] Barra superior de Seelen restaurada.' -ForegroundColor Green
+}
+
+# ------------------------------------------------------------------ recursos de la comunidad de Seelen (seelen.io/resources)
+# Se piden con el mismo enlace que usa el boton "Descargar" de la web: seelen-ui.uri://resource/<entorno>/<uuid>.
+# OJO: el uuid NO es el codigo corto de la URL de la web (1jBowF...), sino ese mismo codigo decodificado de base64url a 16 bytes.
+# No se incluyen en el repo: Seelen los baja de su tienda. Los de iconos hay que ACTIVARlos: Seelen guarda la lista en
+# settings.json (activeIconPacks) y el ULTIMO de la lista es el que manda.
+$script:SeelenResources = @(
+    @{ Name = 'CRiOS HD Mod (iconos del dock)'; Id = 'd63068c0-5b45-4c3c-a7d2-416096ada519'; Kind = 'iconpacks' }
+)
+function Install-RiceSeelenResources([int]$waitSeconds = 45) {
+    $root = Join-Path $env:APPDATA 'com.seelen.seelen-ui'
+    $settings = Join-Path $root 'settings.json'
+    $activate = @()
+    foreach ($r in $script:SeelenResources) {
+        $meta = Join-Path $root "$($r.Kind)\$($r.Id)\metadata.slu"
+        if (-not (Test-Path $meta)) {
+            Start-RiceUnelevated "seelen-ui.uri://resource/production/$($r.Id)"
+            $t = 0; while (-not (Test-Path $meta) -and $t -lt $waitSeconds) { Start-Sleep -Seconds 2; $t += 2 }
+        }
+        if (-not (Test-Path $meta)) {
+            Write-Host "[!] $($r.Name): no se pudo descargar (sin red, o Seelen aun no estaba listo). No pasa nada: instalalo desde seelen.io/resources." -ForegroundColor Yellow
+            continue
+        }
+        Write-Host "[+] $($r.Name): descargado." -ForegroundColor Green
+        if ($r.Kind -eq 'iconpacks') { $activate += $r.Id }
+    }
+    if (-not $activate.Count -or -not (Test-Path $settings)) { return }
+    try {
+        $s = [IO.File]::ReadAllText($settings) | ConvertFrom-Json
+        $cur = @(); if ($s.PSObject.Properties.Name -contains 'activeIconPacks') { $cur = @($s.activeIconPacks) }
+        if (-not $cur.Count) { $cur = @('@system/icon-pack') }
+        $new = @($cur | Select-Object -Unique)
+        foreach ($id in $activate) { if ($new -notcontains $id) { $new += $id } }
+        if (($new -join '|') -eq ($cur -join '|')) { Write-Host '[+] Paquete de iconos: ya activo.' -ForegroundColor Green; return }
+        Copy-Item $settings "$settings.bak-windows-rice" -Force
+        if ($s.PSObject.Properties.Name -contains 'activeIconPacks') { $s.activeIconPacks = $new } else { $s | Add-Member -NotePropertyName activeIconPacks -NotePropertyValue $new }
+        [IO.File]::WriteAllText($settings, ($s | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
+        Write-Host '[+] Paquete de iconos activado. Reinicio Seelen para que lo cargue.' -ForegroundColor Green
+        Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2
+        $app = Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($app) { Start-RiceUnelevated "shell:AppsFolder\$($app.AppID)" }
+    } catch { Write-Host "[!] No pude activar el paquete de iconos ($($_.Exception.Message)). Activalo desde los ajustes de Seelen." -ForegroundColor Yellow }
 }
 
 # ------------------------------------------------------------------ WebView2 (el motor con el que Seelen dibuja barra y dock)

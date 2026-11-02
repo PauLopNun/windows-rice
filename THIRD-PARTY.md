@@ -12,6 +12,8 @@ Este repo solo contiene scripts y ajustes. Las aplicaciones **no se redistribuye
 | Plugin Colors | [Flow-Launcher/Flow.Launcher.Plugin.Color](https://github.com/Flow-Launcher/Flow.Launcher.Plugin.Color) | ver su repo |
 | Plugin Search Unicode & Emoji | [blueset/flow-search-unicode](https://github.com/blueset/flow-search-unicode) | ver su repo |
 | Cursor Bibata Modern Classic (se descarga al instalar, no se incluye aquí) | [ful1e5/Bibata_Cursor](https://github.com/ful1e5/Bibata_Cursor) | GPL-3.0 |
+| Paquete de iconos *CRiOS HD Mod IconPack* de Seelen (se descarga de la tienda de Seelen al instalar, **no se incluye aquí**) | [seelen.io](https://seelen.io/resources/1jBowFtFTDyn0kFglq2lGQ/crioshd) | ver su página |
+| Tema *Rice Wave* (`config/seelen-roaming/themes/rice-wave`, efecto ola del dock) | propio de este repo | MIT (como el resto) |
 | Fondo `assets/wallpaper.jpg` | generado para este repo con la paleta Catppuccin | MIT (como el resto) |
 
 Los plugins se descargan al instalar, con versión fija (`plugins.json`) y comprobación de SHA256.
