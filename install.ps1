@@ -362,6 +362,7 @@ if (-not $NoTweaks) { Apply-RiceTweaks $state { Save-State } }
 # ---------------------------------------------------------------- cursor (Bibata: uno para modo oscuro y otro para claro; version fija + SHA256)
 # despues de los ajustes de Windows: asi toma el modo oscuro recien activado
 if (-not $NoCursor) { Install-RiceCursor (Join-Path $PSScriptRoot 'cursor.json') $state { Save-State } }
+if (-not $NoCursor) { Install-RiceCursorWatcher $PSScriptRoot $state { Save-State } }
 Set-RiceAutostart $state { Save-State } -NoSeelen:$NoSeelen
 
 # ---------------------------------------------------------------- WebView2 (Seelen lo necesita moderno)

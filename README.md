@@ -76,7 +76,7 @@ Es **idempotente**: puedes repetirlo y salta lo que ya está hecho. Si ya tenía
 | 🔎 **Everything** | Búsqueda instantánea de archivos; Flow la usa por debajo (por eso arranca con Windows) |
 | 💻 **Terminal** | Catppuccin Mocha, JetBrainsMono Nerd Font, PowerShell 7 y prompt **Starship** |
 | 🛠️ **CLI** | Git, zoxide (`z carpeta`), fzf, lazygit, fastfetch |
-| 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern: *Classic* (negro) en modo oscuro e *Ice* (blanco) en modo claro; `theme.ps1` cambia el cursor junto con el modo. Se descarga al instalar y al desinstalar vuelve el tuyo |
+| 🖱️ **Cursor** | [Bibata](https://github.com/ful1e5/Bibata_Cursor) Modern: *Classic* (negro) en modo oscuro e *Ice* (blanco) en modo claro; **cambia solo** cuando cambias entre modo claro y oscuro (en Configuración de Windows, en Seelen o con `theme.ps1`): un proceso oculto que espera ese cambio, sin gastar CPU y con ~10 MB de RAM. Se descarga al instalar y al desinstalar vuelve el tuyo (`-NoCursor` para no tocarlo) |
 | 🖼️ **Fondo** | Degradado oscuro Catppuccin generado para este repo |
 | 🌙 **Windows** | Modo oscuro, extensiones de archivo visibles, sin botón de chat ni de vistas (el de widgets lo protege Windows 11) |
 | 🧩 **WebView2** | Si el de Windows es antiguo (Seelen necesita Chromium 123+) se actualiza solo; con uno viejo el dock sale sin fondo |
@@ -144,7 +144,6 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 | `export-config.ps1` | Guarda tu config en `config\` |
 | `rice-lib.ps1` | Funciones compartidas |
 | `plugins.json` | Plugins de Flow con versión fija y SHA256 |
-| `cursor.json` | Cursor Bibata con versión fija y SHA256 |
 | `config\` | Ajustes que se aplican al instalar |
 | `assets\` | Fondo de pantalla |
 

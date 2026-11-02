@@ -537,6 +537,36 @@ function Restore-RiceCursor($state) {
     Write-Host '[+] Cursor devuelto al que tenias.' -ForegroundColor Green
 }
 
+# ------------------------------------------------------------------ vigilante del cursor (cambia el cursor al cambiar de modo oscuro/claro)
+# Un powershell oculto que espera, sin gastar CPU, a que cambie el modo de Windows (Configuracion, Seelen o theme.ps1).
+# Se copia a %LOCALAPPDATA%\windows-rice\watcher para que siga funcionando aunque muevas o borres la carpeta del pack.
+function Stop-RiceCursorWatcher {
+    $pidFile = Join-Path $env:LOCALAPPDATA 'windows-rice\watcher\pid.txt'
+    if (-not (Test-Path $pidFile)) { return }
+    $wpid = 0; [void][int]::TryParse(((Get-Content $pidFile -Raw).Trim()), [ref]$wpid)
+    if ($wpid -gt 0) {
+        $p = Get-Process -Id $wpid -ErrorAction SilentlyContinue
+        if ($p -and $p.ProcessName -match '^powershell') { try { Stop-Process -Id $wpid -Force -ErrorAction Stop } catch { } }
+    }
+    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+}
+function Install-RiceCursorWatcher([string]$packDir, $state, [scriptblock]$save) {
+    try {
+        $dir = Join-Path $env:LOCALAPPDATA 'windows-rice\watcher'
+        Stop-RiceCursorWatcher; Start-Sleep -Seconds 1
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        foreach ($f in 'cursor-watcher.ps1', 'rice-lib.ps1', 'cursor.json') { Copy-Item (Join-Path $packDir $f) (Join-Path $dir $f) -Force }
+        $vbs  = Join-Path $dir 'launcher.vbs'
+        $line = 'CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""' + (Join-Path $dir 'cursor-watcher.ps1') + '""", 0, False'
+        Set-Content -Path $vbs -Value $line -Encoding ASCII
+        Set-ItemProperty $script:RunKey -Name 'windows-rice-cursor' -Value ('wscript.exe "{0}"' -f $vbs)
+        if (@($state.runEntries) -notcontains 'windows-rice-cursor') { $state.runEntries = @($state.runEntries) + 'windows-rice-cursor' }
+        & $save
+        Start-RiceUnelevated $vbs
+        Write-Host '[+] El cursor cambiara solo al cambiar entre modo oscuro y claro (vigilante oculto, arranca con Windows).' -ForegroundColor Green
+    } catch { Write-Host "[!] Vigilante del cursor: $($_.Exception.Message)" -ForegroundColor Yellow }
+}
+
 # ------------------------------------------------------------------ comprobar la barra superior de Seelen
 # Seelen puede reescribir su barra al arrancar (o puede venir de una instalacion a medias). Tras abrirlo se compara
 # con la del pack por modulos y orden (no por formato) y, si no coincide, se restaura y se reinicia Seelen.
