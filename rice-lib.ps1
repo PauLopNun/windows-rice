@@ -642,7 +642,7 @@ function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
 # ocultar barra/dock), Apply-RiceConfig dice "ya aplicada, no la piso" y esas novedades nunca llegan. Esta funcion las pone
 # aparte, sin pisar el resto de ajustes del usuario: copia el tema si falta o cambio, lo activa en activeThemes y copia
 # solo las claves de byWidget que define el pack. Reinicia Seelen solo si cambio algo.
-function Ensure-RiceSeelenTheme([string]$cfgRoot, [switch]$NoTopBar) {
+function Ensure-RiceSeelenTheme([string]$cfgRoot, [switch]$BarraAbajo) {
     $refTheme = Join-Path $cfgRoot 'seelen-roaming\themes\rice-wave'
     $refSet   = Join-Path $cfgRoot 'seelen-roaming\settings.json'
     if (-not (Test-Path $refTheme) -or -not (Test-Path $refSet)) { return }
@@ -684,19 +684,40 @@ function Ensure-RiceSeelenTheme([string]$cfgRoot, [switch]$NoTopBar) {
                 }
             }
         }
-        # barra superior: -NoTopBar la desactiva; sin el parametro, si estaba desactivada (de una pasada anterior con -NoTopBar) se reactiva
+        # variante -BarraAbajo: la barra de herramientas pasa abajo como iconos sueltos (tema Bubbles de Seelen), compacta, y el dock
+        # sin margen para quedar lo mas pegado posible. Sin el parametro, si venia de una pasada anterior con -BarraAbajo, se vuelve arriba.
+        $needState = $false
         if ($s.PSObject.Properties.Name -contains 'byWidget') {
-            if (-not ($s.byWidget.PSObject.Properties.Name -contains '@seelen/fancy-toolbar')) { $s.byWidget | Add-Member -NotePropertyName '@seelen/fancy-toolbar' -NotePropertyValue ([pscustomobject]@{}) }
-            $tb = $s.byWidget.'@seelen/fancy-toolbar'
-            $want = -not $NoTopBar
-            if ($tb.PSObject.Properties.Name -contains 'enabled') { if ($tb.enabled -ne $want) { $tb.enabled = $want; $dirty = $true } }
-            elseif ($NoTopBar) { $tb | Add-Member -NotePropertyName enabled -NotePropertyValue $false; $dirty = $true }
-        }
-        if ($dirty) {
+            foreach ($wn in '@seelen/fancy-toolbar', '@seelen/weg') { if (-not ($s.byWidget.PSObject.Properties.Name -contains $wn)) { $s.byWidget | Add-Member -NotePropertyName $wn -NotePropertyValue ([pscustomobject]@{}) } }
+            $tb = $s.byWidget.'@seelen/fancy-toolbar'; $wg = $s.byWidget.'@seelen/weg'
+            $setv = {
+                param($o, $k, $v)
+                if ($o.PSObject.Properties.Name -contains $k) { if ("$($o.$k)" -ne "$v") { $o.$k = $v; return $true } }
+                else { $o | Add-Member -NotePropertyName $k -NotePropertyValue $v; return $true }
+                return $false
+            }
+            $themes2 = @($s.activeThemes)
+            if ($BarraAbajo) {
+                foreach ($kv in @(@('position', 'Bottom'), @('padding', 2), @('hideMode', 'OnOverlap'), @('enabled', $true))) { if (& $setv $tb $kv[0] $kv[1]) { $dirty = $true } }
+                if (& $setv $wg 'margin' 0) { $dirty = $true }
+                if ($themes2 -notcontains '@eythaann/bubbles') { $themes2 = @($themes2[0], '@eythaann/bubbles') + @($themes2[1..($themes2.Count - 1)]); $s.activeThemes = $themes2; $dirty = $true }
+                $vref = Join-Path (Split-Path -Parent $cfgRoot) 'variantes\barra-abajo\seelen-fancy-toolbar-state.yml'
+                $vdst = Join-Path $root 'data\seelen-fancy-toolbar\state.yml'
+                if (Test-Path $vref) {
+                    $have = if (Test-Path $vdst) { Get-RiceToolbarSig ([IO.File]::ReadAllText($vdst)) } else { '' }
+                    if ((Get-RiceToolbarSig ([IO.File]::ReadAllText($vref))) -ne $have) { $needState = $true; $dirty = $true }
+                }
+            } elseif ($tb.PSObject.Properties.Name -contains 'position' -and $tb.position -eq 'Bottom') {
+                $tb.position = 'Top'; $tb.padding = 8
+                if ($wg.PSObject.Properties.Name -contains 'margin') { $wg.margin = 8 }
+                $s.activeThemes = @($themes2 | Where-Object { $_ -ne '@eythaann/bubbles' }); $dirty = $true
+            }
+        }        if ($dirty) {
             $bak = "$settings.bak-windows-rice"
             if (-not (Test-Path $bak)) { Copy-Item $settings $bak -Force }
             Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2   # si Seelen sigue abierto, reescribe settings.json al cerrarse
             [IO.File]::WriteAllText($settings, ($s | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
+            if ($needState) { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $vdst) | Out-Null; if (Test-Path $vdst) { Copy-Item $vdst "$vdst.bak-windows-rice" -Force }; Copy-Item $vref $vdst -Force }
             $changed = $true
         }
     } catch { Write-Host "[!] No pude activar el tema Rice Wave ($($_.Exception.Message)). Activalo desde los ajustes de Seelen." -ForegroundColor Yellow; return }
