@@ -57,7 +57,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 | Opción | Efecto |
 |---|---|
 | `-NoSeelen` | **Modo ligero**: sin dock ni barra (Seelen es lo que más RAM gasta, ver abajo) |
-| `-NoTopBar` | **Sin barra superior**: solo el dock de abajo. Repite sin el parámetro para volver a ponerla |
+| `-BarraAbajo` | **Barra abajo en burbujas**: sin barra superior; CPU, RAM, volumen, red, notificaciones y calendario pasan abajo como iconos sueltos (tema *Bubbles* de Seelen) y el dock queda en el centro. Repite sin el parámetro para volver a la barra de arriba |
 | `-NoCli` | Sin Git, zoxide, fzf, lazygit ni fastfetch |
 | `-NoCursor` | No cambia el cursor del ratón |
 | `-NoTweaks` | No toca modo oscuro, extensiones ni botones de la barra |
