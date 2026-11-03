@@ -642,7 +642,7 @@ function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
 # ocultar barra/dock), Apply-RiceConfig dice "ya aplicada, no la piso" y esas novedades nunca llegan. Esta funcion las pone
 # aparte, sin pisar el resto de ajustes del usuario: copia el tema si falta o cambio, lo activa en activeThemes y copia
 # solo las claves de byWidget que define el pack. Reinicia Seelen solo si cambio algo.
-function Ensure-RiceSeelenTheme([string]$cfgRoot) {
+function Ensure-RiceSeelenTheme([string]$cfgRoot, [switch]$NoTopBar) {
     $refTheme = Join-Path $cfgRoot 'seelen-roaming\themes\rice-wave'
     $refSet   = Join-Path $cfgRoot 'seelen-roaming\settings.json'
     if (-not (Test-Path $refTheme) -or -not (Test-Path $refSet)) { return }
@@ -683,6 +683,14 @@ function Ensure-RiceSeelenTheme([string]$cfgRoot) {
                     } else { $cur | Add-Member -NotePropertyName $k.Name -NotePropertyValue $k.Value; $dirty = $true }
                 }
             }
+        }
+        # barra superior: -NoTopBar la desactiva; sin el parametro, si estaba desactivada (de una pasada anterior con -NoTopBar) se reactiva
+        if ($s.PSObject.Properties.Name -contains 'byWidget') {
+            if (-not ($s.byWidget.PSObject.Properties.Name -contains '@seelen/fancy-toolbar')) { $s.byWidget | Add-Member -NotePropertyName '@seelen/fancy-toolbar' -NotePropertyValue ([pscustomobject]@{}) }
+            $tb = $s.byWidget.'@seelen/fancy-toolbar'
+            $want = -not $NoTopBar
+            if ($tb.PSObject.Properties.Name -contains 'enabled') { if ($tb.enabled -ne $want) { $tb.enabled = $want; $dirty = $true } }
+            elseif ($NoTopBar) { $tb | Add-Member -NotePropertyName enabled -NotePropertyValue $false; $dirty = $true }
         }
         if ($dirty) {
             $bak = "$settings.bak-windows-rice"

@@ -21,7 +21,8 @@ param(
     [switch]$NoTweaks,   # no tocar modo oscuro / extensiones / botones de la barra
     [switch]$NoLaunch,   # no abrir las apps al terminar
     [switch]$NoSeelen,   # modo ligero: sin Seelen (dock/barra). Seelen gasta ~1 GB de RAM
-    [switch]$NoCursor    # no cambiar el cursor del raton (Bibata)
+    [switch]$NoCursor,   # no cambiar el cursor del raton (Bibata)
+    [switch]$NoTopBar    # sin barra superior de Seelen: solo el dock de abajo
 )
 
 $ErrorActionPreference = 'Continue'
@@ -373,7 +374,7 @@ if (-not $NoSeelen) { [void](Ensure-RiceWebView2) }
 if (-not $NoLaunch) {
     Info 'Abriendo Seelen UI, Flow Launcher, PowerToys y Everything...'
     Start-RiceApps -NoSeelen:$NoSeelen
-    if ($hasConfig -and -not $NoSeelen) { Ensure-RiceSeelenTheme $cfgRoot }
+    if ($hasConfig -and -not $NoSeelen) { if (-not $NoTopBar) { Ensure-RiceSeelenToolbar $cfgRoot }; Ensure-RiceSeelenTheme $cfgRoot -NoTopBar:$NoTopBar }
     if (-not $NoSeelen) { Install-RiceSeelenResources }
 }
 
