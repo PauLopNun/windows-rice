@@ -579,6 +579,35 @@ function Install-RiceCursorWatcher([string]$packDir, $state, [scriptblock]$save)
     } catch { Write-Host "[!] Vigilante del cursor: $($_.Exception.Message)" -ForegroundColor Yellow }
 }
 
+# ------------------------------------------------------------------ guardia de ventana sin bordes (el dock/barra no salen al tirar el cursor abajo en un juego)
+# Mismo esquema que el vigilante del cursor: un powershell oculto, copiado a %LOCALAPPDATA%\windows-rice\watcher, que arranca con Windows.
+function Stop-RiceBorderlessGuard {
+    $pidFile = Join-Path $env:LOCALAPPDATA 'windows-rice\watcher\guard-pid.txt'
+    if (-not (Test-Path $pidFile)) { return }
+    $gpid = 0; [void][int]::TryParse(((Get-Content $pidFile -Raw).Trim()), [ref]$gpid)
+    if ($gpid -gt 0) {
+        $p = Get-Process -Id $gpid -ErrorAction SilentlyContinue
+        if ($p -and $p.ProcessName -match '^(powershell|pwsh)') { try { Stop-Process -Id $gpid -Force -ErrorAction Stop } catch { } }
+    }
+    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+}
+function Install-RiceBorderlessGuard([string]$packDir, $state, [scriptblock]$save) {
+    try {
+        $dir = Join-Path $env:LOCALAPPDATA 'windows-rice\watcher'
+        Stop-RiceBorderlessGuard; Start-Sleep -Seconds 1
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        Copy-Item (Join-Path $packDir 'borderless-guard.ps1') (Join-Path $dir 'borderless-guard.ps1') -Force
+        $vbs  = Join-Path $dir 'guard-launcher.vbs'
+        $line = 'CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""' + (Join-Path $dir 'borderless-guard.ps1') + '""", 0, False'
+        Set-Content -Path $vbs -Value $line -Encoding ASCII
+        Set-ItemProperty $script:RunKey -Name 'windows-rice-guard' -Value ('wscript.exe "{0}"' -f $vbs)
+        if (@($state.runEntries) -notcontains 'windows-rice-guard') { $state.runEntries = @($state.runEntries) + 'windows-rice-guard' }
+        & $save
+        Start-RiceUnelevated $vbs
+        Write-Host '[+] En juegos en ventana sin bordes, el dock y la barra de tareas no saldran al tirar el cursor hacia abajo (guardia oculta, arranca con Windows).' -ForegroundColor Green
+    } catch { Write-Host "[!] Guardia de ventana sin bordes: $($_.Exception.Message)" -ForegroundColor Yellow }
+}
+
 # ------------------------------------------------------------------ comprobar la barra superior de Seelen
 # Seelen puede reescribir su barra al arrancar (o puede venir de una instalacion a medias). Tras abrirlo se compara
 # con la del pack por modulos y orden (no por formato) y, si no coincide, se restaura y se reinicia Seelen.
