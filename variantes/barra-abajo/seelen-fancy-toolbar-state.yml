@@ -1,0 +1,16 @@
+isReorderDisabled: false
+left:
+- '@seelen/tb-user-menu'
+center: []
+right:
+- '@default/cpu-usage'
+- '@default/memory-usage'
+- '@seelen/tb-system-tray'
+- '@seelen/tb-keyboard-selector'
+- '@seelen/tb-bluetooth-popup'
+- '@seelen/tb-network-popup'
+- '@seelen/tb-media-popup'
+- '@default/power'
+- '@seelen/tb-notifications'
+- '@seelen/tb-quick-settings'
+- '@seelen/tb-calendar-popup'

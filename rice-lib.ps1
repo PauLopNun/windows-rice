@@ -579,6 +579,35 @@ function Install-RiceCursorWatcher([string]$packDir, $state, [scriptblock]$save)
     } catch { Write-Host "[!] Vigilante del cursor: $($_.Exception.Message)" -ForegroundColor Yellow }
 }
 
+# ------------------------------------------------------------------ guardia de ventana sin bordes (el dock/barra no salen al tirar el cursor abajo en un juego)
+# Mismo esquema que el vigilante del cursor: un powershell oculto, copiado a %LOCALAPPDATA%\windows-rice\watcher, que arranca con Windows.
+function Stop-RiceBorderlessGuard {
+    $pidFile = Join-Path $env:LOCALAPPDATA 'windows-rice\watcher\guard-pid.txt'
+    if (-not (Test-Path $pidFile)) { return }
+    $gpid = 0; [void][int]::TryParse(((Get-Content $pidFile -Raw).Trim()), [ref]$gpid)
+    if ($gpid -gt 0) {
+        $p = Get-Process -Id $gpid -ErrorAction SilentlyContinue
+        if ($p -and $p.ProcessName -match '^(powershell|pwsh)') { try { Stop-Process -Id $gpid -Force -ErrorAction Stop } catch { } }
+    }
+    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+}
+function Install-RiceBorderlessGuard([string]$packDir, $state, [scriptblock]$save) {
+    try {
+        $dir = Join-Path $env:LOCALAPPDATA 'windows-rice\watcher'
+        Stop-RiceBorderlessGuard; Start-Sleep -Seconds 1
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        Copy-Item (Join-Path $packDir 'borderless-guard.ps1') (Join-Path $dir 'borderless-guard.ps1') -Force
+        $vbs  = Join-Path $dir 'guard-launcher.vbs'
+        $line = 'CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""' + (Join-Path $dir 'borderless-guard.ps1') + '""", 0, False'
+        Set-Content -Path $vbs -Value $line -Encoding ASCII
+        Set-ItemProperty $script:RunKey -Name 'windows-rice-guard' -Value ('wscript.exe "{0}"' -f $vbs)
+        if (@($state.runEntries) -notcontains 'windows-rice-guard') { $state.runEntries = @($state.runEntries) + 'windows-rice-guard' }
+        & $save
+        Start-RiceUnelevated $vbs
+        Write-Host '[+] En juegos en ventana sin bordes, el dock y la barra de tareas no saldran al tirar el cursor hacia abajo (guardia oculta, arranca con Windows).' -ForegroundColor Green
+    } catch { Write-Host "[!] Guardia de ventana sin bordes: $($_.Exception.Message)" -ForegroundColor Yellow }
+}
+
 # ------------------------------------------------------------------ comprobar la barra superior de Seelen
 # Seelen puede reescribir su barra al arrancar (o puede venir de una instalacion a medias). Tras abrirlo se compara
 # con la del pack por modulos y orden (no por formato) y, si no coincide, se restaura y se reinicia Seelen.
@@ -613,7 +642,7 @@ function Ensure-RiceSeelenToolbar([string]$cfgRoot, [int]$waitSeconds = 15) {
 # ocultar barra/dock), Apply-RiceConfig dice "ya aplicada, no la piso" y esas novedades nunca llegan. Esta funcion las pone
 # aparte, sin pisar el resto de ajustes del usuario: copia el tema si falta o cambio, lo activa en activeThemes y copia
 # solo las claves de byWidget que define el pack. Reinicia Seelen solo si cambio algo.
-function Ensure-RiceSeelenTheme([string]$cfgRoot) {
+function Ensure-RiceSeelenTheme([string]$cfgRoot, [switch]$BarraAbajo) {
     $refTheme = Join-Path $cfgRoot 'seelen-roaming\themes\rice-wave'
     $refSet   = Join-Path $cfgRoot 'seelen-roaming\settings.json'
     if (-not (Test-Path $refTheme) -or -not (Test-Path $refSet)) { return }
@@ -655,11 +684,40 @@ function Ensure-RiceSeelenTheme([string]$cfgRoot) {
                 }
             }
         }
-        if ($dirty) {
+        # variante -BarraAbajo: la barra de herramientas pasa abajo como iconos sueltos (tema Bubbles de Seelen), compacta, y el dock
+        # sin margen para quedar lo mas pegado posible. Sin el parametro, si venia de una pasada anterior con -BarraAbajo, se vuelve arriba.
+        $needState = $false
+        if ($s.PSObject.Properties.Name -contains 'byWidget') {
+            foreach ($wn in '@seelen/fancy-toolbar', '@seelen/weg') { if (-not ($s.byWidget.PSObject.Properties.Name -contains $wn)) { $s.byWidget | Add-Member -NotePropertyName $wn -NotePropertyValue ([pscustomobject]@{}) } }
+            $tb = $s.byWidget.'@seelen/fancy-toolbar'; $wg = $s.byWidget.'@seelen/weg'
+            $setv = {
+                param($o, $k, $v)
+                if ($o.PSObject.Properties.Name -contains $k) { if ("$($o.$k)" -ne "$v") { $o.$k = $v; return $true } }
+                else { $o | Add-Member -NotePropertyName $k -NotePropertyValue $v; return $true }
+                return $false
+            }
+            $themes2 = @($s.activeThemes)
+            if ($BarraAbajo) {
+                foreach ($kv in @(@('position', 'Bottom'), @('padding', 2), @('hideMode', 'Always'), @('enabled', $true))) { if (& $setv $tb $kv[0] $kv[1]) { $dirty = $true } }
+                if (& $setv $wg 'margin' 0) { $dirty = $true }
+                if ($themes2 -notcontains '@eythaann/bubbles') { $themes2 = @($themes2[0], '@eythaann/bubbles') + @($themes2[1..($themes2.Count - 1)]); $s.activeThemes = $themes2; $dirty = $true }
+                $vref = Join-Path (Split-Path -Parent $cfgRoot) 'variantes\barra-abajo\seelen-fancy-toolbar-state.yml'
+                $vdst = Join-Path $root 'data\seelen-fancy-toolbar\state.yml'
+                if (Test-Path $vref) {
+                    $have = if (Test-Path $vdst) { Get-RiceToolbarSig ([IO.File]::ReadAllText($vdst)) } else { '' }
+                    if ((Get-RiceToolbarSig ([IO.File]::ReadAllText($vref))) -ne $have) { $needState = $true; $dirty = $true }
+                }
+            } elseif ($tb.PSObject.Properties.Name -contains 'position' -and $tb.position -eq 'Bottom') {
+                $tb.position = 'Top'; $tb.padding = 8
+                if ($wg.PSObject.Properties.Name -contains 'margin') { $wg.margin = 8 }
+                $s.activeThemes = @($themes2 | Where-Object { $_ -ne '@eythaann/bubbles' }); $dirty = $true
+            }
+        }        if ($dirty) {
             $bak = "$settings.bak-windows-rice"
             if (-not (Test-Path $bak)) { Copy-Item $settings $bak -Force }
             Stop-RiceApp 'seelen'; Start-Sleep -Seconds 2   # si Seelen sigue abierto, reescribe settings.json al cerrarse
             [IO.File]::WriteAllText($settings, ($s | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
+            if ($needState) { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $vdst) | Out-Null; if (Test-Path $vdst) { Copy-Item $vdst "$vdst.bak-windows-rice" -Force }; Copy-Item $vref $vdst -Force }
             $changed = $true
         }
     } catch { Write-Host "[!] No pude activar el tema Rice Wave ($($_.Exception.Message)). Activalo desde los ajustes de Seelen." -ForegroundColor Yellow; return }

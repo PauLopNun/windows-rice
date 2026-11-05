@@ -21,7 +21,8 @@ param(
     [switch]$NoTweaks,   # no tocar modo oscuro / extensiones / botones de la barra
     [switch]$NoLaunch,   # no abrir las apps al terminar
     [switch]$NoSeelen,   # modo ligero: sin Seelen (dock/barra). Seelen gasta ~1 GB de RAM
-    [switch]$NoCursor    # no cambiar el cursor del raton (Bibata)
+    [switch]$NoCursor,   # no cambiar el cursor del raton (Bibata)
+    [switch]$BarraAbajo  # barra de Seelen abajo, como iconos sueltos (burbujas), en vez de la barra superior
 )
 
 $ErrorActionPreference = 'Continue'
@@ -363,6 +364,7 @@ if (-not $NoTweaks) { Apply-RiceTweaks $state { Save-State } }
 # despues de los ajustes de Windows: asi toma el modo oscuro recien activado
 if (-not $NoCursor) { Install-RiceCursor (Join-Path $PSScriptRoot 'cursor.json') $state { Save-State } }
 if (-not $NoCursor) { Install-RiceCursorWatcher $PSScriptRoot $state { Save-State } }
+Install-RiceBorderlessGuard $PSScriptRoot $state { Save-State }
 Set-RiceAutostart $state { Save-State } -NoSeelen:$NoSeelen
 
 # ---------------------------------------------------------------- WebView2 (Seelen lo necesita moderno)
@@ -372,7 +374,7 @@ if (-not $NoSeelen) { [void](Ensure-RiceWebView2) }
 if (-not $NoLaunch) {
     Info 'Abriendo Seelen UI, Flow Launcher, PowerToys y Everything...'
     Start-RiceApps -NoSeelen:$NoSeelen
-    if ($hasConfig -and -not $NoSeelen) { Ensure-RiceSeelenToolbar $cfgRoot; Ensure-RiceSeelenTheme $cfgRoot }
+    if ($hasConfig -and -not $NoSeelen) { if (-not $BarraAbajo) { Ensure-RiceSeelenToolbar $cfgRoot }; Ensure-RiceSeelenTheme $cfgRoot -BarraAbajo:$BarraAbajo }
     if (-not $NoSeelen) { Install-RiceSeelenResources }
 }
 

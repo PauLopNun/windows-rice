@@ -159,6 +159,7 @@ foreach ($c in @($state.configApplied)) {
 
 # ---------------------------------------------------------------- fondo, ajustes de Windows, autoarranque
 Stop-RiceCursorWatcher
+Stop-RiceBorderlessGuard
 Restore-RiceCursor $state
 Restore-RiceWallpaper $state
 Restore-RiceTweaks $state
