@@ -698,7 +698,7 @@ function Ensure-RiceSeelenTheme([string]$cfgRoot, [switch]$BarraAbajo) {
             }
             $themes2 = @($s.activeThemes)
             if ($BarraAbajo) {
-                foreach ($kv in @(@('position', 'Bottom'), @('padding', 2), @('hideMode', 'OnOverlap'), @('enabled', $true))) { if (& $setv $tb $kv[0] $kv[1]) { $dirty = $true } }
+                foreach ($kv in @(@('position', 'Bottom'), @('padding', 2), @('hideMode', 'Always'), @('enabled', $true))) { if (& $setv $tb $kv[0] $kv[1]) { $dirty = $true } }
                 if (& $setv $wg 'margin' 0) { $dirty = $true }
                 if ($themes2 -notcontains '@eythaann/bubbles') { $themes2 = @($themes2[0], '@eythaann/bubbles') + @($themes2[1..($themes2.Count - 1)]); $s.activeThemes = $themes2; $dirty = $true }
                 $vref = Join-Path (Split-Path -Parent $cfgRoot) 'variantes\barra-abajo\seelen-fancy-toolbar-state.yml'
