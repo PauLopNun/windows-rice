@@ -146,7 +146,7 @@ Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes 
 | `rice-lib.ps1` | Funciones compartidas |
 | `theme.ps1` | Cambia entre modo oscuro y claro (Windows, Seelen y cursor) |
 | `cursor-watcher.ps1` | Vigilante oculto que cambia el cursor al cambiar de modo |
-| `borderless-guard.ps1` | Guardia oculta: en ventana sin bordes, el cursor no llega al borde de abajo y no salen ni el dock ni la barra de Windows |
+| `borderless-guard.ps1` | Guardia oculta: en ventana sin bordes, el cursor no llega al borde de abajo y no sale el dock; mantiene oculta la barra de Windows y la tecla Windows abre el menú de Seelen |
 | `cursor.json` | Cursores Bibata (oscuro y claro) con versión fija y SHA256 |
 | `repair-seelen.ps1` | Restaura la barra superior de Seelen del pack y actualiza WebView2 |
 | `diagnose.ps1` | Diagnóstico de solo lectura para pedir ayuda |
@@ -187,7 +187,15 @@ Seelen oculta la barra y el dock de un monitor que tenga una aplicación a **pan
 
 **En un juego en ventana sin bordes se ve la barra o el dock**
 
-**El pack lo evita con `borderless-guard.ps1`**: si la ventana en primer plano es sin bordes y cubre el monitor, el cursor se detiene 3 px antes del borde de abajo, así que no salen ni el dock ni la barra de Windows (se suelta al salir del juego). Las barras de Seelen son ventanas «siempre encima», así que se dibujan sobre cualquier ventana, también una sin bordes a pantalla completa. Por eso el pack las deja en «ocultar siempre y mostrar al llevar el cursor al borde» (`hideMode: Always`, como el ocultar automáticamente de Windows) y con 400 ms de espera para reaparecer (`delayToShow`). En ventana normal se superponen al pasar el cursor; en un juego sin bordes la guardia frena el cursor antes del borde y no salen. Con `OnOverlap` solo se ocultan si una ventana las tapa y, si no, se quedan fijas; con `Never` también se quedan fijas y se verían encima de los juegos: no uses ninguno de los dos si juegas en ventana sin bordes. Ajustes en `%APPDATA%\com.seelen.seelen-ui\settings.json`. **La barra de tareas de Windows** (la del monitor principal, que se oculta sola) puede aparecer igualmente al empujar el cursor contra el borde inferior: es un comportamiento de Windows con el «ocultar automáticamente» y los juegos sin bordes. Si el juego sigue dejando ver la barra, comprueba que su resolución es la de tu pantalla: algunos juegos arrancan en una más pequeña y la ventana no tapa la barra.
+**El pack lo evita con `borderless-guard.ps1`**: si la ventana en primer plano es sin bordes y cubre el monitor, el cursor se detiene 3 px antes del borde de abajo, así que no salen ni el dock ni la barra de Windows (se suelta al salir del juego). Las barras de Seelen son ventanas «siempre encima», así que se dibujan sobre cualquier ventana, también una sin bordes a pantalla completa. Por eso el pack las deja en «ocultar siempre y mostrar al llevar el cursor al borde» (`hideMode: Always`, como el ocultar automáticamente de Windows) y con 400 ms de espera para reaparecer (`delayToShow`). En ventana normal se superponen al pasar el cursor; en un juego sin bordes la guardia frena el cursor antes del borde y no salen. Con `OnOverlap` solo se ocultan si una ventana las tapa y, si no, se quedan fijas; con `Never` también se quedan fijas y se verían encima de los juegos: no uses ninguno de los dos si juegas en ventana sin bordes. Ajustes en `%APPDATA%\com.seelen.seelen-ui\settings.json`. Si el juego sigue dejando ver la barra, comprueba que su resolución es la de tu pantalla: algunos juegos arrancan en una más pequeña y la ventana no tapa la barra.
+
+La guardia también se encarga de esto, mientras está en marcha:
+- **La barra de tareas de Windows se mantiene oculta siempre** (Seelen ya hace de barra y de menú Inicio). Windows la volvía a desplegar al cambiar de ventana o de monitor, aunque tuviera el ocultar automáticamente. Al cerrar la guardia, o al desinstalar, vuelve.
+- **En un juego sin bordes, la tecla Windows abre el menú de apps de Seelen** (`slu widget trigger @seelen/apps-menu`) en vez del Inicio de Windows, que sacaría su barra. Los atajos Win+tecla se ignoran dentro del juego; Alt+Tab no se toca. Fuera del juego la tecla va a Windows como siempre.
+- **Se le devuelve a la ventana del juego el píxel que Windows le recorta** cuando el menú de Seelen le quita el foco. Sin esto queda una línea oscura de 1 px abajo y la ventana hace un pequeño tirón al entrar y salir.
+- Escribe un log pequeño con los cambios de estado en `%LOCALAPPDATA%\windows-rice\watcher\guard.log`, por si algo no se comporta.
+
+Si matas la guardia a la fuerza desde el Administrador de tareas mientras juegas, la barra de Windows queda oculta hasta que reinicies el Explorador.
 
 **Error de certificado `0x8a15005e` o «msstore» al instalar**
 

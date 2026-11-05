@@ -590,6 +590,16 @@ function Stop-RiceBorderlessGuard {
         if ($p -and $p.ProcessName -match '^(powershell|pwsh)') { try { Stop-Process -Id $gpid -Force -ErrorAction Stop } catch { } }
     }
     Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+    Show-RiceWindowsTaskbar
+}
+# La guardia oculta la barra de Windows mientras corre; si se la mata a la fuerza no llega a restaurarla, asi que se hace aqui.
+function Show-RiceWindowsTaskbar {
+    try {
+        if (-not ('RiceTrayFix' -as [type])) {
+            Add-Type -Name RiceTrayFix -Namespace '' -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll", CharSet=System.Runtime.InteropServices.CharSet.Unicode)] public static extern System.IntPtr FindWindow(string c, string n); [System.Runtime.InteropServices.DllImport("user32.dll")] public static extern bool ShowWindow(System.IntPtr h, int cmd);'
+        }
+        foreach ($c in 'Shell_TrayWnd', 'Shell_SecondaryTrayWnd') { $h = [RiceTrayFix]::FindWindow($c, $null); if ($h -ne [IntPtr]::Zero) { [void][RiceTrayFix]::ShowWindow($h, 4) } }
+    } catch { }
 }
 function Install-RiceBorderlessGuard([string]$packDir, $state, [scriptblock]$save) {
     try {
