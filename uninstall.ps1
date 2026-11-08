@@ -9,7 +9,7 @@
     powershell -ExecutionPolicy Bypass -File .\uninstall.ps1 -Purge   # borra tambien configs de las apps
 #>
 [CmdletBinding()]
-param([switch]$Purge)
+param([switch]$Purge, [switch]$Todo)   # -Todo: sin state.json, quita todas las apps del pack sin preguntar
 
 $ErrorActionPreference = 'Continue'
 $Marker    = 'windows-rice'
@@ -34,13 +34,13 @@ function Info($m) { Write-Host "[*] $m" -ForegroundColor Cyan }
 function Ok($m)   { Write-Host "[+] $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "[!] $m" -ForegroundColor Yellow }
 
-if (-not (Test-Path $StateFile)) {
-    Warn "No hay ${StateFile}: no se que instalo el script, asi que no quito apps. Limpio solo los restos (vigilantes, autoarranque) y devuelvo la barra de tareas."
-    Stop-RiceLeftovers
-    Restore-RiceTaskbar $null
-    exit 0
+$noState = -not (Test-Path $StateFile)
+if ($noState) {
+    # sin registro (instalaron las apps a mano o con otra version): se pregunta que quitar, mas abajo
+    $state = [pscustomobject]@{ installedPackages = @() }
+} else {
+    $state = Get-Content $StateFile -Raw | ConvertFrom-Json
 }
-$state = Get-Content $StateFile -Raw | ConvertFrom-Json
 # lo primero: parar vigilantes y quitar autoarranque, para que nada vuelva a lanzar las apps mientras se desinstalan
 Stop-RiceLeftovers
 
@@ -70,6 +70,37 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     }
     Set-Alias -Name winget -Value $wgPath -Scope Script
     Write-Host "[+] winget encontrado en $wgPath" -ForegroundColor Green
+}
+
+# ---------------------------------------------------------------- sin state.json: preguntar que apps quitar
+if ($noState) {
+    Warn "No hay ${StateFile}: el instalador no dejo registro de lo que puso, asi que no se que es tuyo y que lo instalo el script."
+    $found = @()
+    foreach ($c in @(
+        @{ Id = 'Seelen.SeelenUI';              Name = 'Seelen UI (la barra/dock)' }
+        @{ Id = 'Flow-Launcher.Flow-Launcher';  Name = 'Flow Launcher' }
+        @{ Id = 'voidtools.Everything';         Name = 'Everything' }
+        @{ Id = 'Starship.Starship';            Name = 'Starship' }
+        @{ Id = 'DEVCOM.JetBrainsMonoNerdFont'; Name = 'JetBrainsMono Nerd Font' }
+        @{ Id = 'Microsoft.PowerToys';          Name = 'PowerToys' }
+    )) {
+        $out = (winget list --id $c.Id --exact --accept-source-agreements 2>&1 | Out-String)
+        $here = $out -match [regex]::Escape($c.Id)
+        # Seelen a veces no sale en winget list desde una consola de administrador: se mira tambien en las apps de Windows
+        if (-not $here -and $c.Id -eq 'Seelen.SeelenUI') {
+            $here = [bool]((Get-AppxPackage -Name 'Seelen*' -ErrorAction SilentlyContinue) -or (Get-StartApps -Name '*Seelen*' -ErrorAction SilentlyContinue))
+        }
+        if ($here) { $found += $c }
+    }
+    if (-not $found.Count) { Info 'No encuentro ninguna app del pack instalada con winget.' }
+    foreach ($c in $found) {
+        $yes = $Todo
+        if (-not $yes) {
+            try { $yes = ((Read-Host "Desinstalar $($c.Name)? (s/N)") -match '^\s*[sSyY]') } catch { $yes = $false }
+        }
+        if ($yes) { $state.installedPackages = @($state.installedPackages) + $c.Id }
+    }
+    if (-not @($state.installedPackages).Count) { Info 'No se quita ninguna app.' }
 }
 
 # ---------------------------------------------------------------- perfil predeterminado de Terminal
@@ -226,7 +257,7 @@ if ($Purge) {
     }
 }
 
-Remove-Item $StateDir -Recurse -Force
+if (Test-Path $StateDir) { Remove-Item $StateDir -Recurse -Force }
 Write-Host ''
 Ok 'Hecho. Reinicia (o cierra sesion) para que la barra de tareas de Windows vuelva del todo.'
 if (-not $Purge) { Write-Host 'Si quieres borrar tambien las configs de las apps, ejecuta con -Purge la proxima vez.' }
