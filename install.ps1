@@ -31,6 +31,11 @@ $StateDir    = Join-Path $env:LOCALAPPDATA 'windows-rice'
 $StateFile   = Join-Path $StateDir 'state.json'
 $SchemeName  = 'Catppuccin Mocha'
 $FontFace    = 'JetBrainsMono Nerd Font'
+if (-not $PSScriptRoot -or -not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'rice-lib.ps1'))) {
+    Write-Host '[!] Faltan archivos: install.ps1 necesita el repo completo (rice-lib.ps1, config, ...), no solo este archivo.' -ForegroundColor Yellow
+    Write-Host '    Instala con una linea:  powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/PauLopNun/windows-rice/main/get.ps1 | iex"' -ForegroundColor Yellow
+    exit 1
+}
 . (Join-Path $PSScriptRoot 'rice-lib.ps1')
 
 function Info($m) { Write-Host "[*] $m" -ForegroundColor Cyan }

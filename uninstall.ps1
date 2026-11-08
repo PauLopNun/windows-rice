@@ -15,7 +15,20 @@ $ErrorActionPreference = 'Continue'
 $Marker    = 'windows-rice'
 $StateDir  = Join-Path $env:LOCALAPPDATA 'windows-rice'
 $StateFile = Join-Path $StateDir 'state.json'
-. (Join-Path $PSScriptRoot 'rice-lib.ps1')
+# rice-lib.ps1 va junto a este script. Si alguien bajo solo uninstall.ps1 (p. ej. a Descargas) se baja la libreria del repo.
+$lib = if ($PSScriptRoot) { Join-Path $PSScriptRoot 'rice-lib.ps1' } else { $null }
+if (-not $lib -or -not (Test-Path -LiteralPath $lib)) {
+    $lib = Join-Path $env:TEMP 'windows-rice-lib.ps1'
+    Write-Host '[*] No encuentro rice-lib.ps1 junto al script: lo descargo de GitHub...' -ForegroundColor Cyan
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest 'https://raw.githubusercontent.com/PauLopNun/windows-rice/main/rice-lib.ps1' -OutFile $lib -UseBasicParsing -ErrorAction Stop
+    } catch {
+        Write-Host "[!] No pude descargarlo ($($_.Exception.Message)). Baja el repo completo (ZIP) de https://github.com/PauLopNun/windows-rice y ejecuta desinstalar.bat desde esa carpeta." -ForegroundColor Yellow
+        exit 1
+    }
+}
+. $lib
 
 function Info($m) { Write-Host "[*] $m" -ForegroundColor Cyan }
 function Ok($m)   { Write-Host "[+] $m" -ForegroundColor Green }
