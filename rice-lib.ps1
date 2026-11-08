@@ -739,3 +739,79 @@ function Ensure-RiceWebView2([version]$min = '123.0.0.0') {
     Write-Host '    Descarga el "Evergreen Standalone Installer" de https://developer.microsoft.com/microsoft-edge/webview2 , instalalo y reinicia Seelen.' -ForegroundColor Yellow
     return $false
 }
+
+# ------------------------------------------------------------------ barra de tareas de Windows
+# Seelen oculta la barra nativa con "ocultar automaticamente". Si se desinstala asi, la barra no vuelve sola.
+$script:StuckRects = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3'
+function Get-RiceTaskbarAutoHide {
+    try { return [bool]((([byte[]](Get-ItemProperty $script:StuckRects -ErrorAction Stop).Settings)[8]) -band 1) } catch { return $null }
+}
+function Set-RiceTaskbarAutoHide([bool]$on) {
+    try {
+        $s = [byte[]](Get-ItemProperty $script:StuckRects -ErrorAction Stop).Settings
+        $s[8] = if ($on) { [byte]($s[8] -bor 1) } else { [byte]($s[8] -band 0xFE) }
+        Set-ItemProperty $script:StuckRects -Name Settings -Value $s -ErrorAction Stop
+    } catch { return $false }
+    # avisa al Explorador sin reiniciarlo (ABM_SETSTATE) y se asegura de que la ventana de la barra este visible
+    if (-not ('RiceTaskbar' -as [type])) {
+        Add-Type -Namespace '' -Name RiceTaskbar -MemberDefinition @'
+[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+public struct RECT { public int l, t, r, b; }
+[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+public struct APPBARDATA { public int cb; public System.IntPtr hWnd; public uint msg; public uint edge; public RECT rc; public System.IntPtr lp; }
+[System.Runtime.InteropServices.DllImport("shell32.dll")] public static extern System.UIntPtr SHAppBarMessage(uint m, ref APPBARDATA d);
+[System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] public static extern System.IntPtr FindWindow(string c, string t);
+[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern bool ShowWindow(System.IntPtr h, int n);
+'@
+    }
+    $h = [RiceTaskbar]::FindWindow('Shell_TrayWnd', $null)
+    if ($h -ne [IntPtr]::Zero) {
+        $d = New-Object RiceTaskbar+APPBARDATA
+        $d.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($d); $d.hWnd = $h
+        $d.lp = [IntPtr]$(if ($on) { 3 } else { 2 })   # ABS_ALWAYSONTOP (+ ABS_AUTOHIDE)
+        [void][RiceTaskbar]::SHAppBarMessage(10, [ref]$d)
+        if (-not $on) { [void][RiceTaskbar]::ShowWindow($h, 5) }
+    }
+    return $true
+}
+function Restore-RiceTaskbar($state) {
+    $want = $false                                   # sin dato guardado: barra siempre visible
+    if ($state -and $null -ne $state.taskbarAutoHide) { $want = [bool]$state.taskbarAutoHide }
+    $cur = Get-RiceTaskbarAutoHide
+    if ($null -eq $cur) { return }
+    if ($cur -ne $want) {
+        if (Set-RiceTaskbarAutoHide $want) { Write-Host "[+] Barra de tareas de Windows: $(if ($want) { 'oculta automaticamente (como la tenias)' } else { 'visible otra vez' })." -ForegroundColor Green }
+    } else {
+        [void](Set-RiceTaskbarAutoHide $want)        # por si la ventana de la barra seguia oculta
+    }
+}
+
+# ------------------------------------------------------------------ restos y desinstalacion robusta
+function Stop-RiceLeftovers([switch]$Seelen) {
+    # procesos ocultos lanzados desde %LOCALAPPDATA%\windows-rice\watcher (vigilantes del cursor / ventanas)
+    foreach ($p in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '^(powershell|pwsh|wscript)\.exe$' -and $_.ProcessId -ne $PID -and $_.CommandLine -match 'windows-rice[\\/]+watcher' })) {
+        try { Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop } catch { }
+    }
+    # entradas de autoarranque propias (windows-rice-*), aunque vengan de versiones anteriores del script
+    $key = Get-Item $script:RunKey -ErrorAction SilentlyContinue
+    if ($key) { foreach ($n in $key.GetValueNames()) { if ($n -like 'windows-rice-*') { Remove-ItemProperty $script:RunKey -Name $n -ErrorAction SilentlyContinue } } }
+    # tarea de inicio de Seelen (solo si la instalo este script)
+    if ($Seelen) {
+        Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskName -like 'Seelen*' -or $_.TaskPath -like '*\Seelen\*' } |
+            ForEach-Object { try { Unregister-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -Confirm:$false -ErrorAction Stop } catch { } }
+    }
+}
+
+# winget uninstall con limite de tiempo: algunos desinstaladores (Seelen) se quedan colgados y la ventana no avanza nunca.
+function Invoke-RiceWingetUninstall([string]$id, [int]$TimeoutSec = 300) {
+    $wc = Get-Command winget -ErrorAction SilentlyContinue | Select-Object -First 1
+    $wg = if ($wc -and $wc.CommandType -eq 'Alias') { $wc.Definition } elseif ($wc) { $wc.Source } else { Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\winget.exe' }
+    $p = Start-Process -FilePath $wg -ArgumentList "uninstall --id $id --exact --silent --source winget --accept-source-agreements" -PassThru -NoNewWindow
+    $null = $p.Handle   # sin esto ExitCode puede salir vacio
+    if (-not $p.WaitForExit($TimeoutSec * 1000)) {
+        & taskkill.exe /PID $p.Id /T /F 2>&1 | Out-Null   # mata winget y el desinstalador que se colgo
+        return 'timeout'
+    }
+    return "$($p.ExitCode)"
+}

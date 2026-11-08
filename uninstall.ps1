@@ -22,10 +22,14 @@ function Ok($m)   { Write-Host "[+] $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "[!] $m" -ForegroundColor Yellow }
 
 if (-not (Test-Path $StateFile)) {
-    Warn "No hay $StateFile. Parece que install.ps1 nunca se ejecuto en este usuario."
-    exit 1
+    Warn "No hay ${StateFile}: no se que instalo el script, asi que no quito apps. Limpio solo los restos (vigilantes, autoarranque) y devuelvo la barra de tareas."
+    Stop-RiceLeftovers
+    Restore-RiceTaskbar $null
+    exit 0
 }
 $state = Get-Content $StateFile -Raw | ConvertFrom-Json
+# lo primero: parar vigilantes y quitar autoarranque, para que nada vuelva a lanzar las apps mientras se desinstalan
+Stop-RiceLeftovers
 
 # ---------------------------------------------------------------- winget
 # En consolas de administrador a veces winget no esta en el PATH: lo buscamos a mano.
@@ -172,15 +176,25 @@ foreach ($id in $pkgs) {
     if ($id -eq 'Seelen.SeelenUI') { Stop-RiceApp 'seelen' }
     if ($id -eq 'Flow-Launcher.Flow-Launcher') { Get-Process -Name 'Flow.Launcher' -ErrorAction SilentlyContinue | Stop-Process -Force }
     Info "Desinstalando $id..."
-    winget uninstall --id $id --exact --silent --source winget --accept-source-agreements
-    if ($LASTEXITCODE -eq 0) { Ok "$id desinstalado." }
-    elseif ($LASTEXITCODE -eq -1978335107) {
+    $code = Invoke-RiceWingetUninstall $id 300
+    if ($code -eq 'timeout') {
+        Warn "$id tarda demasiado (se ha colgado el desinstalador). Lo cierro y reintento una vez..."
+        if ($id -eq 'Seelen.SeelenUI') { Stop-RiceApp 'seelen' }
+        $code = Invoke-RiceWingetUninstall $id 300
+    }
+    if ($code -eq '0') { Ok "$id desinstalado." }
+    elseif ($code -eq 'timeout') { Warn "${id}: sigue colgado. Quitalo desde Configuracion > Aplicaciones > Aplicaciones instaladas y sigue." }
+    elseif ($code -eq '-1978335107') {
         Info "$id es de usuario: reintento sin privilegios de administrador..."
         $c = Uninstall-RiceUnelevated $id
         if ($c -eq "0") { Ok "$id desinstalado." } else { Warn "${id}: no se pudo (codigo $c). Quitalo desde Configuracion > Aplicaciones." }
     }
-    else { Warn "${id}: winget devolvio $LASTEXITCODE (quitalo desde Configuracion > Aplicaciones si sigue ahi)." }
+    else { Warn "${id}: winget devolvio $code (quitalo desde Configuracion > Aplicaciones si sigue ahi)." }
 }
+
+# ---------------------------------------------------------------- restos y barra de tareas de Windows
+Stop-RiceLeftovers -Seelen:(@($state.installedPackages) -contains 'Seelen.SeelenUI')
+Restore-RiceTaskbar $state
 
 # ---------------------------------------------------------------- purge opcional
 if ($Purge) {
