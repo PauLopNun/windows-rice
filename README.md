@@ -133,6 +133,8 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\windows-rice\uninstal
 
 También puedes hacer **doble clic en `desinstalar.bat`** (pide administrador solo y no se cierra al terminar). Si un desinstalador se cuelga (pasaba con Seelen), el script lo corta a los 5 minutos y reintenta; también para los vigilantes ocultos, quita el autoarranque y la tarea de Seelen, y **devuelve la barra de tareas de Windows** (Seelen la deja en "ocultar automáticamente").
 
+Si no existe `%LOCALAPPDATA%\windows-rice\state.json` (las apps se instalaron a mano o con otra versión), el desinstalador **te pregunta una por una** cuáles quitar (Seelen, Flow, Everything, Starship, la fuente, PowerToys). Con `-Todo` (p. ej. `desinstalar.bat -Todo`) quita todas sin preguntar.
+
 Deshace **solo** lo que hizo el script: apps instaladas, plugins, cursor, tema y fuente de Terminal, bloque del perfil de PowerShell, `starship.toml`, ExecutionPolicy, ajustes de Windows, fondo, autoarranque, y devuelve la configuración que tenías antes. Reinicia después.
 
 Plan B: *Panel de control → Recuperación → Restaurar sistema* → **"Antes de windows-rice"**. El registro de cambios está en `%LOCALAPPDATA%\windows-rice\state.json`.
