@@ -67,6 +67,10 @@ if (Test-Path $StateFile) {
     $state.flowPlugins       = @($state.flowPlugins | Where-Object { $_ })
 }
 function Save-State { $state | ConvertTo-Json -Depth 10 | Set-Content -Path $StateFile -Encoding UTF8 }
+# como tenias la barra de tareas (Seelen la oculta): solo se apunta si Seelen aun no esta en marcha, para que el desinstalador la devuelva igual
+if (-not $state.Contains('taskbarAutoHide') -and -not (Get-Process -Name 'seelen*' -ErrorAction SilentlyContinue)) {
+    $state.taskbarAutoHide = Get-RiceTaskbarAutoHide
+}
 
 # ---------------------------------------------------------------- winget
 # En consolas de administrador a veces winget no esta en el PATH: lo buscamos a mano.
